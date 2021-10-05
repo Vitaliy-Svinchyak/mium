@@ -4,6 +4,7 @@ use reqwest::Response;
 pub mod parse;
 pub mod download;
 pub mod decode;
+pub mod accumulate;
 
 async fn get_request(url: &str) -> Result<Response, reqwest::Error> {
     let client = reqwest::Client::builder().build().unwrap();

@@ -1,4 +1,3 @@
-extern crate jpeg_decoder as jpeg;
 extern crate num_cpus;
 
 use std::sync::mpsc::channel;
@@ -8,8 +7,6 @@ use futures::future::join_all;
 
 use crate::job::{accumulate, decode, download};
 use crate::job::parse;
-use std::fs::File;
-use std::io::Write;
 
 mod job;
 
@@ -17,7 +14,7 @@ mod job;
 #[tokio::main]
 async fn main() {
     let max_cpus = num_cpus::get();
-    let max_cpus = 2;
+    let max_cpus = 5;
     let mut parse_jobs: Vec<_> = vec![];
     let mut download_jobs: Vec<_> = vec![];
     let mut decode_jobs: Vec<_> = vec![];
@@ -43,7 +40,6 @@ async fn main() {
             for url in url_rx {
                 let bytes = download::job(url).await.expect("Failed to download picture");
                 bytes_tx.send(bytes).expect("Can't send bytes to channel");
-                break;
             }
 
             println!("{} downloaded", page.clone());
@@ -52,8 +48,8 @@ async fn main() {
 
         let decode_job = thread::spawn(move || async move {
             for bytes in bytes_rx {
-                let (pixels, info) = decode::job(bytes).await;
-                pixels_tx.send((pixels, info)).expect("Can't send bytes to channel");
+                let image = decode::job(bytes).await;
+                pixels_tx.send(image).expect("Can't send bytes to channel");
             }
 
             println!("{} decoded", page.clone());
@@ -61,9 +57,9 @@ async fn main() {
         }).join().expect("Failed to create decode thread");
 
         let accumulate_job = thread::spawn(move || async move {
-            let mut medium = pixels_rx.recv().unwrap().0;
-            for (i, (pixels, info)) in pixels_rx.iter().enumerate() {
-                medium = accumulate::job(&pixels, i, &medium);
+            let mut medium = pixels_rx.recv().unwrap();
+            for (i, image) in pixels_rx.iter().enumerate() {
+                accumulate::job(&image, i, &mut medium);
             }
 
             println!("{} accumulated", page.clone());
@@ -86,9 +82,10 @@ async fn main() {
 
     let mut medium_picture = pictures[0].clone();
     for (i, picture) in pictures.iter().skip(1).enumerate() {
-        medium_picture = accumulate::job(picture, i, &medium_picture);
+        accumulate::job(picture, i, &mut medium_picture);
     }
-    let mut file = File::create("result.jpeg").unwrap();
+    medium_picture.save("./result.jpeg")
+        .expect("Can't save image");
     // file.write_all(medium_picture.as_slice()).unwrap();
     // join(
     //     // join_all(parse_jobs),

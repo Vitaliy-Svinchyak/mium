@@ -1,10 +1,9 @@
-use jpeg::ImageInfo;
+use image::{DynamicImage, ImageFormat};
+use image::io::Reader as ImageReader;
+use std::io::Cursor;
 
-pub async fn job(bytes: Vec<u8>) -> (Vec<u8>, ImageInfo) {
-    let reader = bytes.as_slice();
-    let mut decoder = jpeg::Decoder::new(reader);
-    let pixels = decoder.decode().expect("failed to decode image");
-    let metadata = decoder.info().unwrap();
-
-    (pixels, metadata)
+pub async fn job(bytes: Vec<u8>) -> DynamicImage {
+    ImageReader::with_format(Cursor::new(bytes.as_slice()), ImageFormat::Jpeg)
+        .decode()
+        .expect("Can't decode image")
 }

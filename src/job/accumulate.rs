@@ -1,10 +1,24 @@
-pub fn job(pixels: &Vec<u8>, iteration: usize, medium_pixels: &Vec<u8>) -> Vec<u8> {
-    let mut new_medium_pixels = vec![];
-    for (index, color) in pixels.iter().enumerate() {
-        let medium_color = medium_pixels.get(index).unwrap();
-        new_medium_pixels[index] = (medium_color * (iteration as u8) + color) / (iteration as u8) + 1;
-        break;
-    }
+use image::{DynamicImage, GenericImage, GenericImageView, Rgba};
 
-    new_medium_pixels
+pub fn job(image: &DynamicImage, iteration: usize, medium_image: &mut DynamicImage) {
+    let (imgx, imgy) = image.dimensions();
+
+    for x in 0..imgx {
+        for y in 0..imgy {
+            let Rgba(pixel) = image.get_pixel(x, y);
+            let Rgba(medium_pixel) = medium_image.get_pixel(x, y);
+            let new_pixel = Rgba([
+                calculate_new_byte(pixel[0], medium_pixel[0], iteration),
+                calculate_new_byte(pixel[1], medium_pixel[1], iteration),
+                calculate_new_byte(pixel[1], medium_pixel[1], iteration),
+                1
+            ]);
+
+            medium_image.put_pixel(x, y, new_pixel);
+        }
+    }
+}
+
+fn calculate_new_byte(byte: u8, medium_byte: u8, iteration: usize) -> u8 {
+    ((medium_byte as usize * iteration + byte as usize) / (iteration + 1)) as u8
 }

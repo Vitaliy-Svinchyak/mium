@@ -1,13 +1,15 @@
 use std::io::Cursor;
 use std::sync::mpsc::{Receiver, Sender};
 
-use image::{DynamicImage, ImageFormat};
+use image::{DynamicImage, ImageFormat, GenericImageView};
 use image::io::Reader as ImageReader;
 
 pub fn job(rx: Receiver<Vec<u8>>, tx: Sender<DynamicImage>) {
-    for bytes in rx {
-        let image = decode(bytes);
-        tx.send(image).expect("Can't send bytes to channel");
+    loop {
+        for bytes in &rx {
+            let image = decode(bytes);
+            tx.send(image).expect("Can't send bytes to channel");
+        }
     }
 }
 

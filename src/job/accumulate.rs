@@ -4,7 +4,6 @@ use image::{DynamicImage, GenericImage, GenericImageView, Rgba};
 
 pub fn job(rx: Receiver<DynamicImage>, tx: Sender<DynamicImage>, max: usize) {
     let mut medium = rx.iter().next().unwrap();
-    println!("got first");
     let mut i = 1;
     if max == i {
         println!("Only 1 to accumulate. Sending to next");
@@ -16,7 +15,6 @@ pub fn job(rx: Receiver<DynamicImage>, tx: Sender<DynamicImage>, max: usize) {
         for image in &rx {
             accumulate(&image, i, &mut medium);
             i += 1;
-            println!("accumulated");
 
             if max == i {
                 println!("Sending to next");

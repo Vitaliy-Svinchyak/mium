@@ -11,3 +11,4 @@ scraper = "0.12.0" # html parsing
 tokio = { version = "1.0.2", features = ["macros", "rt-multi-thread"] }
 num_cpus = "1.13.0"
 image = "0.23.14"
+futures = "0.3.17"

@@ -10,7 +10,7 @@ use crate::job::parse;
 
 mod job;
 
-const MAX_IMAGES_PER_PAGE: usize = 3;
+const MAX_IMAGES_PER_PAGE: usize = 5;
 const MAX_PAGES: usize = 1;
 
 #[tokio::main]

@@ -14,7 +14,6 @@ mod job;
 #[tokio::main]
 async fn main() {
     let max_cpus = num_cpus::get();
-    let max_cpus = 5;
     let mut parse_jobs: Vec<_> = vec![];
     let mut download_jobs: Vec<_> = vec![];
     let mut decode_jobs: Vec<_> = vec![];
@@ -24,7 +23,7 @@ async fn main() {
         let (url_tx, url_rx) = channel();
         let (bytes_tx, bytes_rx) = channel();
         let (pixels_tx, pixels_rx) = channel();
-        let query = format!("https://www.goodfon.ru/search/?q={}&page={}", "car", page);
+        let query = format!("https://www.goodfon.ru/search/?q={}&page={}", "anime", page);
 
         let parse_job = thread::spawn(move || async move {
             let urls = parse::job(query).await;
@@ -48,7 +47,7 @@ async fn main() {
 
         let decode_job = thread::spawn(move || async move {
             for bytes in bytes_rx {
-                let image = decode::job(bytes).await;
+                let image = decode::job(bytes);
                 pixels_tx.send(image).expect("Can't send bytes to channel");
             }
 
@@ -82,14 +81,10 @@ async fn main() {
 
     let mut medium_picture = pictures[0].clone();
     for (i, picture) in pictures.iter().skip(1).enumerate() {
+        medium_picture.save(format!("./result{}.jpeg", i))
+            .expect("Can't save middle image");
         accumulate::job(picture, i, &mut medium_picture);
     }
     medium_picture.save("./result.jpeg")
         .expect("Can't save image");
-    // file.write_all(medium_picture.as_slice()).unwrap();
-    // join(
-    //     // join_all(parse_jobs),
-    //     join_all(download_jobs),
-    //     join_all(decode_jobs),
-    // ).await;
 }

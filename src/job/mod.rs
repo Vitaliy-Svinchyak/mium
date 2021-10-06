@@ -1,4 +1,4 @@
-use reqwest::header::{ACCEPT, ACCEPT_ENCODING, ACCEPT_LANGUAGE, CONNECTION, USER_AGENT};
+use reqwest::header::USER_AGENT;
 use reqwest::Response;
 
 pub mod parse;
@@ -11,11 +11,7 @@ async fn get_request(url: &str) -> Result<Response, reqwest::Error> {
 
     let req = client
         .get(url)
-        .header(USER_AGENT, "PostmanRuntime/7.28.4")
-        .header(ACCEPT_LANGUAGE, "en-gb")
-        .header(ACCEPT_ENCODING, "*")
-        .header(ACCEPT, "*/*")
-        .header(CONNECTION, "keep-alive");
+        .header(USER_AGENT, "dick from the mountain");
 
     req.send().await
 }

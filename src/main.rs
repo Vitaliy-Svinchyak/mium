@@ -4,7 +4,6 @@ use std::sync::mpsc::channel;
 use std::thread;
 
 use tokio::runtime::Handle;
-use tokio::sync::mpsc::channel as tokio_channel;
 
 use crate::job::{accumulate, decode, download};
 use crate::job::parse;
@@ -26,10 +25,10 @@ async fn main() {
         let (bytes_tx, bytes_rx) = channel();
         let (image_tx, image_rx) = channel();
         let (acc_image_tx, acc_image_rx) = channel();
-        let query = format!("https://www.goodfon.ru/search/?q={}&page={}", "anime", page);
+        let query = format!("https://www.goodfon.ru/search/?q={}&page={}", "nature", page);
 
-        rt.spawn(async {
-            parse::job(query, url_tx).await;
+        thread::spawn(move || {
+            parse::job(query, url_tx);
         });
 
         rt.spawn(async move {

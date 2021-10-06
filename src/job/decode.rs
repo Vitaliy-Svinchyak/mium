@@ -1,7 +1,7 @@
 use std::io::Cursor;
 use std::sync::mpsc::{Receiver, Sender};
 
-use image::{DynamicImage, ImageFormat, GenericImageView};
+use image::{DynamicImage, ImageFormat};
 use image::io::Reader as ImageReader;
 
 pub fn job(rx: Receiver<Vec<u8>>, tx: Sender<DynamicImage>) {

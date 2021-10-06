@@ -14,6 +14,7 @@ mod job;
 #[tokio::main]
 async fn main() {
     let max_cpus = num_cpus::get();
+    let max_cpus = 2;
     let mut parse_jobs: Vec<_> = vec![];
     let mut download_jobs: Vec<_> = vec![];
     let mut decode_jobs: Vec<_> = vec![];
@@ -26,45 +27,25 @@ async fn main() {
         let query = format!("https://www.goodfon.ru/search/?q={}&page={}", "anime", page);
 
         let parse_job = thread::spawn(move || async move {
-            let urls = parse::job(query).await;
-            for url in urls {
-                url_tx.send(url).expect("Can't send url to channel");
-            }
-
+            parse::job(query, url_tx).await;
             println!("{} parsed", page.clone());
-            ()
         }).join().expect("Failed to create parse thread");
 
         let download_job = thread::spawn(move || async move {
-            for url in url_rx {
-                let bytes = download::job(url).await.expect("Failed to download picture");
-                bytes_tx.send(bytes).expect("Can't send bytes to channel");
-            }
-
+            download::job(url_rx, bytes_tx).await;
             println!("{} downloaded", page.clone());
-            ()
         }).join().expect("Failed to create download thread");
 
         let decode_job = thread::spawn(move || async move {
-            for bytes in bytes_rx {
-                let image = decode::job(bytes);
-                pixels_tx.send(image).expect("Can't send bytes to channel");
-            }
-
+            decode::job(bytes_rx, pixels_tx);
             println!("{} decoded", page.clone());
-            ()
         }).join().expect("Failed to create decode thread");
 
         let accumulate_job = thread::spawn(move || async move {
-            let mut medium = pixels_rx.recv().unwrap();
-            for (i, image) in pixels_rx.iter().enumerate() {
-                accumulate::job(&image, i, &mut medium);
-            }
-
+            let medium = accumulate::job(pixels_rx);
             println!("{} accumulated", page.clone());
             medium
         }).join().expect("Failed to create decode thread");
-
 
         parse_jobs.push(parse_job);
         download_jobs.push(download_job);
@@ -83,7 +64,7 @@ async fn main() {
     for (i, picture) in pictures.iter().skip(1).enumerate() {
         medium_picture.save(format!("./result{}.jpeg", i))
             .expect("Can't save middle image");
-        accumulate::job(picture, i, &mut medium_picture);
+        accumulate::accumulate(picture, i, &mut medium_picture);
     }
     medium_picture.save("./result.jpeg")
         .expect("Can't save image");

@@ -1,6 +1,17 @@
+use std::sync::mpsc::{Receiver, Sender};
+
 use image::{DynamicImage, GenericImage, GenericImageView, Rgba};
 
-pub fn job(image: &DynamicImage, iteration: usize, medium_image: &mut DynamicImage) {
+pub fn job(rx: Receiver<DynamicImage>) -> DynamicImage {
+    let mut medium = rx.recv().unwrap();
+    for (i, image) in rx.iter().enumerate() {
+        accumulate(&image, i, &mut medium);
+    }
+
+    medium
+}
+
+pub fn accumulate(image: &DynamicImage, iteration: usize, medium_image: &mut DynamicImage) {
     let (imgx, imgy) = image.dimensions();
 
     for x in 0..imgx {

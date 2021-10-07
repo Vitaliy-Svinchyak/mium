@@ -1,17 +1,24 @@
-use std::sync::mpsc::Sender;
+use std::sync::mpsc::{Receiver, Sender};
 
 use reqwest::blocking::Response;
 use reqwest::header::USER_AGENT;
 use scraper::{Html, Selector};
 
-pub fn job(query: String, tx: Sender<Option<String>>) {
-    let urls = parse(query);
+pub fn job(rx: Receiver<Option<String>>, tx: Sender<Option<String>>) {
+    for query in rx {
+        match query {
+            None => {
+                tx.send(None).expect("Can't send end of channel");
+            }
+            Some(query) => {
+                let urls = parse(query);
 
-    for url in urls {
-        tx.send(Some(url)).expect("Can't send url to channel");
+                for url in urls {
+                    tx.send(Some(url)).expect("Can't send url to channel");
+                }
+            }
+        }
     }
-
-    tx.send(None).expect("Can't send end of channel");
 }
 
 fn parse(query: String) -> Vec<String> {

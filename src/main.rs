@@ -20,13 +20,13 @@ async fn main() {
     let start = Instant::now();
 
     for page in 1..max_cpus {
+        let (page_tx, page_rx) = channel();
         let (url_tx, url_rx) = channel();
         let (image_tx, image_rx) = channel();
         let (acc_image_tx, acc_image_rx) = channel();
-        let query = format!("https://www.goodfon.ru/search/?q={}&page={}", "anime", page);
 
         thread::spawn(move || {
-            parse::job(query, url_tx);
+            parse::job(page_rx, url_tx);
         });
 
         rt.spawn(async move {
@@ -41,6 +41,11 @@ async fn main() {
         thread::spawn(move || {
             accumulate::job(acc_image_rx, main_sender);
         });
+
+        let query = format!("https://www.goodfon.ru/search/?q={}&page={}", "anime", page);
+
+        page_tx.send(Some(query)).expect("Can't send query to channel");
+        page_tx.send(None).expect("Can't send end of channel");
     }
 
     loop {

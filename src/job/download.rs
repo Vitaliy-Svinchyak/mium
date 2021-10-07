@@ -4,19 +4,20 @@ use futures::future::join_all;
 use reqwest::header::USER_AGENT;
 use reqwest::Response;
 
-pub async fn job(rx: Receiver<String>, tx: Sender<Option<Vec<u8>>>, max_images: usize) {
-    let mut i = 0;
+pub async fn job(rx: Receiver<Option<String>>, tx: Sender<Option<Vec<u8>>>) {
     let mut downloads: Vec<_> = vec![];
 
     for url in rx {
-        let sender = tx.clone();
-        downloads.push(download(url, sender));
-
-        i += 1;
-        if i == max_images {
-            join_all(downloads).await;
-            tx.send(None).expect("Can't send end of download channel");
-            break;
+        match url {
+            None => {
+                join_all(downloads).await;
+                tx.send(None).expect("Can't send end of download channel");
+                break;
+            }
+            Some(url) => {
+                let sender = tx.clone();
+                downloads.push(download(url, sender));
+            }
         }
     }
 }
@@ -31,6 +32,7 @@ async fn download(url: String, tx: Sender<Option<Vec<u8>>>) {
 async fn get_request(url: &str) -> Result<Response, reqwest::Error> {
     let client = reqwest::Client::builder().build()
         .expect("Can't build client");
+    println!("donwloading {}", url);
 
     let req = client
         .get(url)

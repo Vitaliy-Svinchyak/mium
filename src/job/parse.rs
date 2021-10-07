@@ -4,12 +4,14 @@ use reqwest::blocking::Response;
 use reqwest::header::USER_AGENT;
 use scraper::{Html, Selector};
 
-pub fn job(query: String, tx: Sender<String>) {
+pub fn job(query: String, tx: Sender<Option<String>>) {
     let urls = parse(query);
 
     for url in urls {
-        tx.send(url).expect("Can't send url to channel");
+        tx.send(Some(url)).expect("Can't send url to channel");
     }
+
+    tx.send(None).expect("Can't send end of channel");
 }
 
 fn parse(query: String) -> Vec<String> {

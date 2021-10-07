@@ -33,15 +33,28 @@ pub fn accumulate(image: &DynamicImage, iteration: usize, medium_image: &mut Dyn
         for y in 0..imgy {
             let Rgba(pixel) = image.get_pixel(x, y);
             let Rgba(medium_pixel) = medium_image.get_pixel(x, y);
-            let new_pixel = Rgba([
-                calculate_new_byte(pixel[0], medium_pixel[0], iteration),
-                calculate_new_byte(pixel[1], medium_pixel[1], iteration),
-                calculate_new_byte(pixel[1], medium_pixel[1], iteration),
-                1
-            ]);
+            let new_pixel = calculate_new_color(pixel, medium_pixel, iteration);
 
             medium_image.put_pixel(x, y, new_pixel);
         }
+    }
+}
+
+fn calculate_new_color(pixel: [u8; 4], medium_pixel: [u8; 4], iteration: usize) -> Rgba<u8> {
+    let pixel_is_white = pixel[0] >= 250 && pixel[1] >= 250 && pixel[2] >= 250;
+    let medium_pixel_is_white = medium_pixel[0] >= 250 && medium_pixel[1] >= 250 && medium_pixel[2] >= 250;
+
+    if pixel_is_white {
+        Rgba(medium_pixel)
+    } else if medium_pixel_is_white {
+        Rgba(pixel)
+    } else {
+        Rgba([
+            calculate_new_byte(pixel[0], medium_pixel[0], iteration),
+            calculate_new_byte(pixel[1], medium_pixel[1], iteration),
+            calculate_new_byte(pixel[2], medium_pixel[2], iteration),
+            1
+        ])
     }
 }
 

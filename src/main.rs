@@ -11,12 +11,10 @@ use crate::job::parse;
 
 mod job;
 
-const MAX_IMAGES_PER_PAGE: usize = 24;
-
 #[tokio::main]
 async fn main() {
     let max_cpus = num_cpus::get();
-    let max_cpus = 3;
+    let max_cpus = 2;
     let (result_image_tx, result_image_rx) = channel();
     let rt = Handle::current();
     let start = Instant::now();
@@ -26,14 +24,14 @@ async fn main() {
         let (bytes_tx, bytes_rx) = channel();
         let (image_tx, image_rx) = channel();
         let (acc_image_tx, acc_image_rx) = channel();
-        let query = format!("https://www.goodfon.ru/search/?q={}&page={}", "nature", page);
+        let query = format!("https://www.goodfon.ru/search/?q={}&page={}", "anime", page);
 
         thread::spawn(move || {
             parse::job(query, url_tx);
         });
 
         rt.spawn(async move {
-            download::job(url_rx, bytes_tx, MAX_IMAGES_PER_PAGE).await;
+            download::job(url_rx, bytes_tx).await;
         });
 
         thread::spawn(move || {
@@ -51,15 +49,12 @@ async fn main() {
     }
 
     loop {
-        match result_image_rx.recv() {
-            Ok(medium_picture) => {
-                println!("done in: {:?}", start.elapsed());
+        if let Ok(medium_picture) = result_image_rx.recv() {
+            println!("done in: {:?}", start.elapsed());
 
-                medium_picture.expect("None result picture received").save("./result.jpeg")
-                    .expect("Can't save image");
-                break;
-            }
-            Err(_) => {}
+            medium_picture.expect("None result picture received").save("./result.jpeg")
+                .expect("Can't save image");
+            break;
         }
     }
 }

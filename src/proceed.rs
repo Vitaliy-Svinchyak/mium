@@ -6,12 +6,11 @@ use tokio::runtime::Handle;
 use crate::job::{accumulate, download, parse};
 use image::DynamicImage;
 
-pub fn create_threads(result_image_tx: Sender<Option<DynamicImage>>) -> Vec<Sender<Option<String>>> {
+pub fn create_threads(result_image_tx: Sender<Option<DynamicImage>>, thread_number: usize) -> Vec<Sender<Option<String>>> {
     let rt = Handle::current();
-    let max_cpus = num_cpus::get();
     let mut query_senders = vec![];
 
-    for _a in 0..max_cpus {
+    for _a in 0..thread_number {
         let (query_tx, query_rx) = channel();
         query_senders.push(query_tx);
 

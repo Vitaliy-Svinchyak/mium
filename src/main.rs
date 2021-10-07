@@ -8,12 +8,13 @@ use structopt::StructOpt;
 mod job;
 mod proceed;
 mod collect;
+mod gui;
 
 #[derive(StructOpt, Debug)]
 struct Cli {
     #[structopt(short, long, default_value = "anime")]
     query: String,
-    #[structopt(short, long, default_value = "1")]
+    #[structopt(short, long, default_value = "4")]
     pages: usize,
     #[structopt(short, long, default_value = "result")]
     file: String,
@@ -22,13 +23,15 @@ struct Cli {
 #[tokio::main]
 async fn main() {
     let args: Cli = Cli::from_args();
+    let max_cpus = num_cpus::get();
+    let thread_number = if args.pages < max_cpus { args.pages } else { max_cpus };
 
     let (result_image_tx, result_image_rx) = channel();
     let start = Instant::now();
-    let query_senders = proceed::create_threads(result_image_tx);
+    let query_senders = proceed::create_threads(result_image_tx, thread_number);
     send_jobs(query_senders, args.pages, args.query);
 
-    let result_picture = collect::collect_result(result_image_rx, args.pages);
+    let result_picture = collect::collect_result(result_image_rx, args.pages, thread_number);
     println!("done in: {:?}", start.elapsed());
 
     result_picture

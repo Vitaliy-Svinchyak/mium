@@ -1,10 +1,13 @@
+use std::io::Cursor;
 use std::sync::mpsc::{Receiver, Sender};
 
 use futures::future::join_all;
+use image::{DynamicImage, ImageFormat};
+use image::io::Reader as ImageReader;
 use reqwest::header::USER_AGENT;
 use reqwest::Response;
 
-pub async fn job(rx: Receiver<Option<String>>, tx: Sender<Option<Vec<u8>>>) {
+pub async fn job(rx: Receiver<Option<String>>, tx: Sender<Option<DynamicImage>>) {
     let mut downloads: Vec<_> = vec![];
 
     for url in rx {
@@ -22,17 +25,23 @@ pub async fn job(rx: Receiver<Option<String>>, tx: Sender<Option<Vec<u8>>>) {
     }
 }
 
-async fn download(url: String, tx: Sender<Option<Vec<u8>>>) {
+async fn download(url: String, tx: Sender<Option<DynamicImage>>) {
     let response = get_request(&url).await.expect("Can't download picture");
 
-    let result = response.bytes().await.expect("Can't get bytes from request").to_vec();
-    tx.send(Some(result)).expect("Can't send picture to channel");
+    let bytes = response.bytes().await.expect("Can't get bytes from request").to_vec();
+    let image = decode(bytes);
+    tx.send(Some(image)).expect("Can't send picture to channel");
+}
+
+fn decode(bytes: Vec<u8>) -> DynamicImage {
+    ImageReader::with_format(Cursor::new(bytes.as_slice()), ImageFormat::Jpeg)
+        .decode()
+        .expect("Can't decode image")
 }
 
 async fn get_request(url: &str) -> Result<Response, reqwest::Error> {
     let client = reqwest::Client::builder().build()
         .expect("Can't build client");
-    println!("donwloading {}", url);
 
     let req = client
         .get(url)

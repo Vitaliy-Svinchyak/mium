@@ -6,7 +6,7 @@ use std::time::Instant;
 
 use tokio::runtime::Handle;
 
-use crate::job::{accumulate, decode, download};
+use crate::job::{accumulate, download};
 use crate::job::parse;
 
 mod job;
@@ -21,7 +21,6 @@ async fn main() {
 
     for page in 1..max_cpus {
         let (url_tx, url_rx) = channel();
-        let (bytes_tx, bytes_rx) = channel();
         let (image_tx, image_rx) = channel();
         let (acc_image_tx, acc_image_rx) = channel();
         let query = format!("https://www.goodfon.ru/search/?q={}&page={}", "anime", page);
@@ -31,11 +30,7 @@ async fn main() {
         });
 
         rt.spawn(async move {
-            download::job(url_rx, bytes_tx).await;
-        });
-
-        thread::spawn(move || {
-            decode::job(bytes_rx, image_tx);
+            download::job(url_rx, image_tx).await;
         });
 
         thread::spawn(move || {

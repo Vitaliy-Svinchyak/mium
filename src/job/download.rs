@@ -9,22 +9,20 @@ pub async fn job(rx: Receiver<String>, tx: Sender<Vec<u8>>, max_images: usize) {
     let mut downloads: Vec<_> = vec![];
 
     for url in rx {
-        downloads.push(download(url));
+        let sender = tx.clone();
+        downloads.push(download(url, sender));
 
         i += 1;
         if i == max_images {
-            for bytes in join_all(downloads).await {
-                tx.send(
-                    bytes.expect("Failed to download picture")
-                ).expect("Can't send bytes to channel");
-            }
+            join_all(downloads).await;
             break;
         }
     }
 }
 
-async fn download(url: String) -> Result<Vec<u8>, reqwest::Error> {
-    let response = get_request(&url).await?;
+async fn download(url: String, tx: Sender<Vec<u8>>) {
+    let response = get_request(&url).await.unwrap();
 
-    Ok(response.bytes().await?.to_vec())
+    let result = response.bytes().await.unwrap().to_vec();
+    tx.send(result).unwrap();
 }

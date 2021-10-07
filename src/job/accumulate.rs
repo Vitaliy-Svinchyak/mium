@@ -6,7 +6,6 @@ pub fn job(rx: Receiver<DynamicImage>, tx: Sender<DynamicImage>, max: usize) {
     let mut medium = rx.iter().next().unwrap();
     let mut i = 1;
     if max == i {
-        println!("Only 1 to accumulate. Sending to next");
         tx.send(medium.clone()).expect("Can't send accumulated result");
         return;
     }
@@ -17,7 +16,6 @@ pub fn job(rx: Receiver<DynamicImage>, tx: Sender<DynamicImage>, max: usize) {
             i += 1;
 
             if max == i {
-                println!("Sending to next");
                 tx.send(medium.clone()).expect("Can't send accumulated result");
                 break;
             }

@@ -2,6 +2,7 @@ extern crate num_cpus;
 
 use std::sync::mpsc::channel;
 use std::thread;
+use std::time::Instant;
 
 use tokio::runtime::Handle;
 
@@ -10,15 +11,16 @@ use crate::job::parse;
 
 mod job;
 
-const MAX_IMAGES_PER_PAGE: usize = 5;
+const MAX_IMAGES_PER_PAGE: usize = 24;
 const MAX_PAGES: usize = 1;
 
 #[tokio::main]
 async fn main() {
     let max_cpus = num_cpus::get();
-    let max_cpus = 2;
+    let max_cpus = 3;
     let (result_image_tx, result_image_rx) = channel();
     let rt = Handle::current();
+    let start = Instant::now();
 
     for page in 1..max_cpus {
         let (url_tx, url_rx) = channel();
@@ -52,6 +54,8 @@ async fn main() {
     loop {
         match result_image_rx.recv() {
             Ok(medium_picture) => {
+                println!("done in: {:?}", start.elapsed());
+
                 medium_picture.save("./result.jpeg")
                     .expect("Can't save image");
                 break;

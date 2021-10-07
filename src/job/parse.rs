@@ -13,19 +13,26 @@ pub fn job(query: String, tx: Sender<String>) {
 }
 
 fn parse(query: String) -> Vec<String> {
-    let response = get_request(&query).unwrap();
-    let data = response.text().unwrap();
+    let response = get_request(&query)
+        .expect("Failed to get query");
+    let data = response.text()
+        .expect("Failed to get data from request");
     let document = Html::parse_document(&data);
-    let selector = Selector::parse("img.wallpapers__item__img").unwrap();
+    let selector = Selector::parse("img.wallpapers__item__img")
+        .expect("Failed to parse selector");
     let pictures = document.select(&selector);
-    let urls: Vec<String> = pictures.map(|v| v.value().attr("src").unwrap().to_owned()).collect();
+    let urls: Vec<String> = pictures.map(
+        |v| v.value().attr("src")
+            .expect("Failed to get src value")
+            .to_owned()
+    ).collect();
 
     urls
 }
 
 
 fn get_request(url: &str) -> Result<Response, reqwest::Error> {
-    let client = reqwest::blocking::Client::builder().build().unwrap();
+    let client = reqwest::blocking::Client::builder().build().expect("Can't build client");
 
     let req = client
         .get(url)

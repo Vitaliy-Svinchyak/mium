@@ -4,11 +4,19 @@ use std::sync::mpsc::{Receiver, Sender};
 use image::{DynamicImage, ImageFormat};
 use image::io::Reader as ImageReader;
 
-pub fn job(rx: Receiver<Vec<u8>>, tx: Sender<DynamicImage>) {
+pub fn job(rx: Receiver<Option<Vec<u8>>>, tx: Sender<Option<DynamicImage>>) {
     loop {
         for bytes in &rx {
-            let image = decode(bytes);
-            tx.send(image).expect("Can't send bytes to channel");
+            match bytes {
+                None => {
+                    tx.send(None).expect("Can't send bytes to channel");
+                    break;
+                }
+                Some(bytes) => {
+                    let image = decode(bytes);
+                    tx.send(Some(image)).expect("Can't send bytes to channel");
+                }
+            }
         }
     }
 }

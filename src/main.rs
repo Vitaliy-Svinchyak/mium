@@ -12,7 +12,6 @@ use crate::job::parse;
 mod job;
 
 const MAX_IMAGES_PER_PAGE: usize = 24;
-const MAX_PAGES: usize = 1;
 
 #[tokio::main]
 async fn main() {
@@ -42,12 +41,12 @@ async fn main() {
         });
 
         thread::spawn(move || {
-            accumulate::job(image_rx, acc_image_tx, MAX_IMAGES_PER_PAGE);
+            accumulate::job(image_rx, acc_image_tx);
         });
 
         let main_sender = result_image_tx.clone();
         thread::spawn(move || {
-            accumulate::job(acc_image_rx, main_sender, MAX_PAGES);
+            accumulate::job(acc_image_rx, main_sender);
         });
     }
 
@@ -56,7 +55,7 @@ async fn main() {
             Ok(medium_picture) => {
                 println!("done in: {:?}", start.elapsed());
 
-                medium_picture.save("./result.jpeg")
+                medium_picture.expect("None result picture received").save("./result.jpeg")
                     .expect("Can't save image");
                 break;
             }

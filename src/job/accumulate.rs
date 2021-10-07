@@ -2,22 +2,25 @@ use std::sync::mpsc::{Receiver, Sender};
 
 use image::{DynamicImage, GenericImage, GenericImageView, Rgba};
 
-pub fn job(rx: Receiver<DynamicImage>, tx: Sender<DynamicImage>, max: usize) {
-    let mut medium = rx.iter().next().unwrap();
+pub fn job(rx: Receiver<Option<DynamicImage>>, tx: Sender<Option<DynamicImage>>) {
+    let mut medium = rx.iter()
+        .next()
+        .expect("Can't get picture from channel")
+        .expect("None first picture received");
     let mut i = 1;
-    if max == i {
-        tx.send(medium.clone()).expect("Can't send accumulated result");
-        return;
-    }
 
     loop {
         for image in &rx {
-            accumulate(&image, i, &mut medium);
-            i += 1;
-
-            if max == i {
-                tx.send(medium.clone()).expect("Can't send accumulated result");
-                break;
+            match image {
+                None => {
+                    tx.send(Some(medium.clone())).expect("Can't send accumulated result");
+                    tx.send(None).expect("Can't send accumulated result");
+                    break;
+                }
+                Some(image) => {
+                    accumulate(&image, i, &mut medium);
+                    i += 1;
+                }
             }
         }
     }

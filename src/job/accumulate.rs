@@ -3,10 +3,17 @@ use std::sync::mpsc::{Receiver, Sender};
 use image::{DynamicImage, GenericImage, GenericImageView, Rgba};
 
 pub fn job(rx: Receiver<Option<DynamicImage>>, tx: Sender<Option<DynamicImage>>) {
-    let mut medium = rx.iter()
+    let medium = rx.iter()
         .next()
-        .expect("Can't get picture from channel")
-        .expect("None first picture received");
+        .expect("Can't get picture from channel");
+
+    if medium.is_none() {
+        tx.send(None).expect("Can't send accumulated result");
+        return;
+    }
+
+    let mut medium = medium.unwrap();
+
     let mut i = 1;
 
     loop {

@@ -9,6 +9,7 @@ pub fn job(rx: Receiver<Option<String>>, tx: Sender<Option<String>>) {
         match query {
             None => {
                 tx.send(None).expect("Can't send end of channel");
+                break;
             }
             Some(query) => {
                 let urls = parse(query);

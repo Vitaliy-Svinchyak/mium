@@ -1,48 +1,32 @@
 extern crate num_cpus;
 
-use std::sync::mpsc::channel;
-use std::thread;
+use std::sync::mpsc::{channel, Receiver, Sender};
 use std::time::Instant;
 
 use image::DynamicImage;
-use tokio::runtime::Handle;
 
-use crate::job::{accumulate, download};
-use crate::job::parse;
+use crate::job::accumulate;
 
 mod job;
+mod proceed;
 
 #[tokio::main]
 async fn main() {
     let pages_to_parse = 3;
-    let max_cpus = num_cpus::get();
     let (result_image_tx, result_image_rx) = channel();
-    let rt = Handle::current();
     let start = Instant::now();
-    let mut query_senders = vec![];
+    let query_senders = proceed::job(result_image_tx);
+    send_jobs(query_senders, pages_to_parse);
 
-    for page in 0..max_cpus {
-        let (query_tx, query_rx) = channel();
-        query_senders.push(query_tx);
+    let result_picture = collect_result(result_image_rx);
+    println!("done in: {:?}", start.elapsed());
 
-        let (url_tx, url_rx) = channel();
-        let (image_tx, image_rx) = channel();
+    result_picture
+        .save("./result.jpeg")
+        .expect("Can't save image");
+}
 
-        thread::spawn(move || {
-            parse::job(query_rx, url_tx);
-        });
-
-        rt.spawn(async move {
-            download::job(url_rx, image_tx).await;
-        });
-
-        let main_sender = result_image_tx.clone();
-        thread::spawn(move || {
-            accumulate::job(image_rx, main_sender);
-        });
-    }
-
-
+fn send_jobs(query_senders: Vec<Sender<Option<String>>>, pages_to_parse: usize) {
     let mut i = 0;
     for page in 1..pages_to_parse {
         let query = format!("https://www.goodfon.ru/search/?q={}&page={}", "anime", page);
@@ -58,6 +42,10 @@ async fn main() {
     for query_tx in query_senders {
         query_tx.send(None).expect("Can't send end of channel");
     }
+}
+
+fn collect_result(result_image_rx: Receiver<Option<DynamicImage>>) -> DynamicImage {
+    let max_cpus = num_cpus::get();
 
     let mut results_received = 0;
     let mut valid_results_received = 1;
@@ -80,13 +68,11 @@ async fn main() {
             results_received += 1;
 
             if results_received == max_cpus {
-                println!("done in: {:?}", start.elapsed());
-
                 medium_picture
                     .save("./result.jpeg")
                     .expect("Can't save image");
 
-                break;
+                break medium_picture;
             }
         }
     }

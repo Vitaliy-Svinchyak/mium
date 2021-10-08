@@ -4,7 +4,9 @@ use reqwest::blocking::Response;
 use reqwest::header::USER_AGENT;
 use scraper::{Html, Selector};
 
-pub fn job(rx: Receiver<Option<String>>, tx: Sender<Option<String>>) {
+use crate::gui::app::LogEvent;
+
+pub fn job(rx: Receiver<Option<String>>, tx: Sender<Option<String>>, log_tx: Sender<LogEvent>) {
     for query in rx {
         match query {
             None => {
@@ -12,7 +14,9 @@ pub fn job(rx: Receiver<Option<String>>, tx: Sender<Option<String>>) {
                 break;
             }
             Some(query) => {
-                let urls = parse(query);
+                log_tx.send(LogEvent::info(format!("Parsing {}", query)));
+                let urls = parse(&query);
+                log_tx.send(LogEvent::info(format!("Parsed {}. Found {} pictures", query, urls.len())));
 
                 for url in urls {
                     tx.send(Some(url)).expect("Can't send url to channel");
@@ -22,8 +26,8 @@ pub fn job(rx: Receiver<Option<String>>, tx: Sender<Option<String>>) {
     }
 }
 
-fn parse(query: String) -> Vec<String> {
-    let response = get_request(&query)
+fn parse(query: &str) -> Vec<String> {
+    let response = get_request(query)
         .expect("Failed to get query");
     let data = response.text()
         .expect("Failed to get data from request");

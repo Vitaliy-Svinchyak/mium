@@ -14,7 +14,7 @@ mod gui;
 struct Cli {
     #[structopt(short, long, default_value = "anime")]
     query: String,
-    #[structopt(short, long, default_value = "4")]
+    #[structopt(short, long, default_value = "2")]
     pages: usize,
     #[structopt(short, long, default_value = "result")]
     file: String,
@@ -28,8 +28,11 @@ async fn main() {
 
     let (result_image_tx, result_image_rx) = channel();
     let start = Instant::now();
-    let query_senders = proceed::create_threads(result_image_tx, thread_number);
+    let (query_senders, thread_connections) = proceed::create_threads(result_image_tx, thread_number);
+
     send_jobs(query_senders, args.pages, args.query);
+
+    gui::main(thread_connections).unwrap();
 
     let result_picture = collect::collect_result(result_image_rx, args.pages, thread_number);
     println!("done in: {:?}", start.elapsed());

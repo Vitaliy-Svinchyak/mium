@@ -3,13 +3,9 @@ use std::{error::Error, io};
 use termion::{event::Key, input::MouseTerminal, raw::IntoRawMode, screen::AlternateScreen};
 use tui::{
     backend::TermionBackend,
-    Frame,
-    layout::{Constraint, Direction, Layout}, Terminal,
+    layout::{Constraint, Layout},
+    Terminal,
 };
-use tui::backend::Backend;
-use tui::layout::Rect;
-use tui::style::{Color, Style};
-use tui::widgets::{BarChart, Block, Borders};
 
 use util::event::{Event, Events};
 
@@ -20,7 +16,7 @@ pub mod app;
 mod util;
 mod widget;
 
-pub fn main(threads: Vec<ThreadInfoReceiver>) -> Result<(), Box<dyn Error>> {
+pub fn main(threads: Vec<ThreadInfoReceiver>, pages: usize) -> Result<(), Box<dyn Error>> {
     let stdout = io::stdout().into_raw_mode()?;
     let stdout = MouseTerminal::from(stdout);
     let stdout = AlternateScreen::from(stdout);
@@ -29,17 +25,24 @@ pub fn main(threads: Vec<ThreadInfoReceiver>) -> Result<(), Box<dyn Error>> {
 
     let events = Events::new();
 
-    // Create a new app with some example state
-    let mut app = App::new(threads);
+    let mut app = App::new(threads, pages);
 
     loop {
         terminal.draw(|f| {
             let chunks = Layout::default()
-                .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
+                .constraints(
+                    [
+                        Constraint::Percentage(30),
+                        Constraint::Percentage(50),
+                        Constraint::Percentage(20),
+                    ]
+                    .as_ref(),
+                )
                 .split(f.size());
 
-            draw_threads(f, &mut app, chunks[0]);
-            draw_bar_chart(f, &mut app, chunks[1]);
+            widget::threads::draw(f, &mut app, chunks[0]);
+            widget::threads_bar_chart::draw(f, &mut app, chunks[1]);
+            widget::progress_bar::draw(f, &mut app, chunks[2]);
         })?;
 
         match events.next()? {
@@ -65,47 +68,4 @@ pub fn main(threads: Vec<ThreadInfoReceiver>) -> Result<(), Box<dyn Error>> {
     }
 
     Ok(())
-}
-
-fn draw_bar_chart<B>(f: &mut Frame<B>, app: &mut App, area: Rect)
-where
-    B: Backend,
-{
-    let chunks = Layout::default()
-        .constraints(vec![Constraint::Percentage(100)])
-        .direction(Direction::Horizontal)
-        .split(area);
-
-    let data: Vec<_> = app
-        .items
-        .items
-        .iter()
-        .map(|v| (v.title.as_str(), v.progress))
-        .collect();
-
-    let barchart = BarChart::default()
-        .block(Block::default().borders(Borders::ALL))
-        .data(&data)
-        .bar_width(7)
-        .bar_style(Style::default().fg(Color::Yellow))
-        .value_style(Style::default().fg(Color::Black).bg(Color::Yellow));
-
-    f.render_widget(barchart, chunks[0]);
-}
-
-fn draw_threads<B>(f: &mut Frame<B>, app: &mut App, area: Rect)
-where
-    B: Backend,
-{
-    let chunks = Layout::default()
-        .direction(Direction::Horizontal)
-        .constraints([Constraint::Percentage(30), Constraint::Percentage(70)].as_ref())
-        .split(area);
-
-    let menu = widget::thread_menu::draw(&app.items.items);
-    f.render_stateful_widget(menu, chunks[0], &mut app.items.state);
-
-    let events_data = app.items.get_selected_logs();
-    let thread_logs = widget::thread_logs::draw(&events_data);
-    f.render_widget(thread_logs, chunks[1]);
 }

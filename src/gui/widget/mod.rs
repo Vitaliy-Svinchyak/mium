@@ -1,2 +1,3 @@
-pub mod thread_menu;
-pub mod thread_logs;
+pub mod progress_bar;
+pub mod threads_bar_chart;
+pub mod threads;

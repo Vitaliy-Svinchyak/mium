@@ -33,7 +33,7 @@ async fn main() {
 
     send_jobs(query_senders, args.pages, args.query);
 
-    gui::main(thread_connections).unwrap();
+    gui::main(thread_connections, args.pages).unwrap();
 }
 
 fn send_jobs(query_senders: Vec<Sender<Option<String>>>, pages_to_parse: usize, query: String) {

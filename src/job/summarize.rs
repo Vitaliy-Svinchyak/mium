@@ -64,8 +64,6 @@ fn collect_result(
             sender.progress();
 
             if results_received == thread_number {
-                sender.closed();
-
                 medium_picture
                     .save("./result.jpeg")
                     .expect("Can't save image");

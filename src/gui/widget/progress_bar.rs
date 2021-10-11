@@ -26,7 +26,7 @@ where
 
     let progress = app.total_progress();
     let label = format!("{:.2}%", progress * 100.0);
-    let progress_color = if progress <= 0.3 {
+    let progress_color = if progress <= 0.5 {
         Color::LightRed
     } else if progress < 1.0 {
         Color::LightYellow

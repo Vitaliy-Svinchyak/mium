@@ -18,8 +18,6 @@ pub struct MulticoloredBarChart<'a> {
     bar_gap: u16,
     /// Set of symbols used to display the data
     bar_set: symbols::bar::Set,
-    /// Style of the bars
-    bar_style: Style,
     /// Style for each bar
     multi_bar_style: Vec<Style>,
     /// Style of the values printed at the bottom of each bar
@@ -44,7 +42,6 @@ impl<'a> Default for MulticoloredBarChart<'a> {
             max: None,
             data: &[],
             values: Vec::new(),
-            bar_style: Style::default(),
             multi_bar_style: vec![],
             bar_width: 1,
             bar_gap: 1,
@@ -71,13 +68,9 @@ impl<'a> MulticoloredBarChart<'a> {
         self
     }
 
+    #[allow(dead_code)]
     pub fn max(mut self, max: u64) -> MulticoloredBarChart<'a> {
         self.max = Some(max);
-        self
-    }
-
-    pub fn bar_style(mut self, style: Style) -> MulticoloredBarChart<'a> {
-        self.bar_style = style;
         self
     }
 
@@ -91,11 +84,13 @@ impl<'a> MulticoloredBarChart<'a> {
         self
     }
 
+    #[allow(dead_code)]
     pub fn bar_gap(mut self, gap: u16) -> MulticoloredBarChart<'a> {
         self.bar_gap = gap;
         self
     }
 
+    #[allow(dead_code)]
     pub fn bar_set(mut self, bar_set: symbols::bar::Set) -> MulticoloredBarChart<'a> {
         self.bar_set = bar_set;
         self
@@ -106,11 +101,13 @@ impl<'a> MulticoloredBarChart<'a> {
         self
     }
 
+    #[allow(dead_code)]
     pub fn label_style(mut self, style: Style) -> MulticoloredBarChart<'a> {
         self.label_style = style;
         self
     }
 
+    #[allow(dead_code)]
     pub fn style(mut self, style: Style) -> MulticoloredBarChart<'a> {
         self.style = style;
         self

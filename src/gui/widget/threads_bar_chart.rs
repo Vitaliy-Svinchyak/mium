@@ -40,6 +40,7 @@ where
         .data(&data)
         .bar_width(7)
         .multi_bar_style(styles)
+        .max(24)
         .value_style(Style::default().fg(Color::Black).bg(Color::Yellow));
 
     f.render_widget(barchart, chunks[0]);

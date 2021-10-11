@@ -33,8 +33,8 @@ pub fn main(threads: Vec<ThreadInfoReceiver>, pages: usize) -> Result<(), Box<dy
             let chunks = Layout::default()
                 .constraints(
                     [
-                        Constraint::Percentage(30),
-                        Constraint::Percentage(50),
+                        Constraint::Percentage(40),
+                        Constraint::Percentage(40),
                         Constraint::Percentage(20),
                     ]
                     .as_ref(),

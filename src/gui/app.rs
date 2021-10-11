@@ -57,7 +57,7 @@ impl ThreadConnection {
 }
 
 pub(super) struct App {
-    pub items: StatefulList<ThreadConnection>,
+    pub items: StatefulList,
 }
 
 impl App {

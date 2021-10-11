@@ -1,23 +1,18 @@
 use tui::widgets::ListState;
 
+use crate::gui::app::{LogEvent, ThreadConnection};
+
 pub mod event;
 
-pub struct StatefulList<T> {
+pub struct StatefulList
+{
     pub state: ListState,
-    pub items: Vec<T>,
+    pub items: Vec<ThreadConnection>,
     pub selected: Option<usize>,
 }
 
-impl<T> StatefulList<T> {
-    pub fn new() -> StatefulList<T> {
-        StatefulList {
-            state: ListState::default(),
-            items: Vec::new(),
-            selected: None,
-        }
-    }
-
-    pub fn with_items(items: Vec<T>) -> StatefulList<T> {
+impl StatefulList {
+    pub fn with_items(items: Vec<ThreadConnection>) -> StatefulList {
         StatefulList {
             state: ListState::default(),
             items,
@@ -58,5 +53,14 @@ impl<T> StatefulList<T> {
     pub fn unselect(&mut self) {
         self.state.select(None);
         self.selected = None;
+    }
+
+    pub fn get_selected_logs(&self) -> Vec<LogEvent> {
+        match self.selected {
+            None => {
+                vec![]
+            }
+            Some(index) => self.items[index].log_events.clone(),
+        }
     }
 }

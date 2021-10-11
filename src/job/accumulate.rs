@@ -1,18 +1,21 @@
 use std::sync::mpsc::{Receiver, Sender};
 
 use image::{DynamicImage, GenericImage, GenericImageView, Rgba};
-use crate::gui::app::LogEvent;
+use crate::gui::app::ThreadEvent;
 
-pub fn job(rx: Receiver<Option<DynamicImage>>, tx: Sender<Option<DynamicImage>>, log_tx: Sender<LogEvent>) {
+pub fn job(rx: Receiver<Option<DynamicImage>>, tx: Sender<Option<DynamicImage>>, log_tx: Sender<ThreadEvent>) {
     let medium = rx.iter()
         .next()
         .expect("Can't get picture from channel");
 
     if medium.is_none() {
         tx.send(None).expect("Can't send early result");
-        log_tx.send(LogEvent::info("Closed.".to_owned()));
+        log_tx.send(ThreadEvent::info("Closed.".to_owned()));
+        log_tx.send(ThreadEvent::close());
+
         return;
     }
+    log_tx.send(ThreadEvent::progress());
 
     let mut medium = medium.unwrap();
 
@@ -24,13 +27,15 @@ pub fn job(rx: Receiver<Option<DynamicImage>>, tx: Sender<Option<DynamicImage>>,
                 None => {
                     tx.send(Some(medium.clone())).expect("Can't send accumulated result");
                     tx.send(None).expect("Can't send end result");
-                    log_tx.send(LogEvent::info("Closed.".to_owned()));
+                    log_tx.send(ThreadEvent::info("Closed.".to_owned()));
+                    log_tx.send(ThreadEvent::close());
 
                     break;
                 }
                 Some(image) => {
                     accumulate(&image, i, &mut medium);
-                    log_tx.send(LogEvent::info(format!("Accumulated {}.", i + 1)));
+                    log_tx.send(ThreadEvent::info(format!("Accumulated {}.", i + 1)));
+                    log_tx.send(ThreadEvent::progress());
 
                     i += 1;
                 }

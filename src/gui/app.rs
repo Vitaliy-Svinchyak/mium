@@ -3,23 +3,37 @@ use std::sync::mpsc::Receiver;
 use crate::gui::util::StatefulList;
 
 #[derive(Debug, Clone)]
-pub enum LogLvl {
+pub enum EventType {
     INFO,
-    WARNING,
     ERROR,
-    CRITICAL,
+    PROGRESS,
+    CLOSE,
 }
 
 #[derive(Debug, Clone)]
-pub struct LogEvent {
-    pub lvl: LogLvl,
+pub struct ThreadEvent {
+    pub lvl: EventType,
     pub data: String,
 }
 
-impl LogEvent {
-    pub fn info(data: String) -> LogEvent {
-        LogEvent {
-            lvl: LogLvl::INFO,
+impl ThreadEvent {
+    pub fn progress() -> ThreadEvent {
+        ThreadEvent {
+            lvl: EventType::PROGRESS,
+            data: "".to_owned(),
+        }
+    }
+
+    pub fn close() -> ThreadEvent {
+        ThreadEvent {
+            lvl: EventType::CLOSE,
+            data: "".to_owned(),
+        }
+    }
+
+    pub fn info(data: String) -> ThreadEvent {
+        ThreadEvent {
+            lvl: EventType::INFO,
             data,
         }
     }
@@ -27,16 +41,20 @@ impl LogEvent {
 
 pub struct ThreadConnection {
     pub title: String,
-    log_channel: Receiver<LogEvent>,
-    pub log_events: Vec<LogEvent>,
+    log_channel: Receiver<ThreadEvent>,
+    pub log_events: Vec<ThreadEvent>,
+    pub progress: u64,
+    pub closed: bool,
 }
 
 impl ThreadConnection {
-    pub fn new(title: String, log_channel: Receiver<LogEvent>) -> ThreadConnection {
+    pub fn new(title: String, log_channel: Receiver<ThreadEvent>) -> ThreadConnection {
         ThreadConnection {
             title,
             log_channel,
             log_events: vec![],
+            progress: 0,
+            closed: false,
         }
     }
 
@@ -45,9 +63,18 @@ impl ThreadConnection {
             let event = self.log_channel.try_recv();
 
             match event {
-                Ok(e) => {
-                    self.log_events.push(e);
-                }
+                Ok(e) => match e.lvl {
+                    EventType::INFO => {
+                        self.log_events.push(e);
+                    }
+                    EventType::ERROR => {}
+                    EventType::PROGRESS => {
+                        self.progress += 1;
+                    }
+                    EventType::CLOSE => {
+                        self.closed = true;
+                    }
+                },
                 Err(_) => {
                     break;
                 }

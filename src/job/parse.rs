@@ -4,21 +4,23 @@ use reqwest::blocking::Response;
 use reqwest::header::USER_AGENT;
 use scraper::{Html, Selector};
 
-use crate::gui::app::LogEvent;
+use crate::gui::app::ThreadEvent;
 
-pub fn job(rx: Receiver<Option<String>>, tx: Sender<Option<String>>, log_tx: Sender<LogEvent>) {
+pub fn job(rx: Receiver<Option<String>>, tx: Sender<Option<String>>, log_tx: Sender<ThreadEvent>) {
     for query in rx {
         match query {
             None => {
                 tx.send(None).expect("Can't send end of channel");
-                log_tx.send(LogEvent::info("Closed.".to_owned()));
+                log_tx.send(ThreadEvent::info("Closed.".to_owned()));
+                log_tx.send(ThreadEvent::close());
 
                 break;
             }
             Some(query) => {
-                log_tx.send(LogEvent::info(format!("Parsing {}", query)));
+                log_tx.send(ThreadEvent::info(format!("Parsing {}", query)));
                 let urls = parse(&query);
-                log_tx.send(LogEvent::info(format!("Parsed {}. Found {} pictures", query, urls.len())));
+                log_tx.send(ThreadEvent::info(format!("Parsed {}. Found {} pictures", query, urls.len())));
+                log_tx.send(ThreadEvent::progress());
 
                 for url in urls {
                     tx.send(Some(url)).expect("Can't send url to channel");

@@ -39,7 +39,7 @@ pub fn create_threads(args: CliArgs, thread_number: usize) -> (Vec<Sender<Option
             download::job(url_rx, image_tx, download_log_tx).await;
         });
         thread_connections.push(ThreadConnection::new(
-            format!("Download_{}", i),
+            format!("Get_{}", i),
             download_log_rx,
         ));
 
@@ -48,7 +48,7 @@ pub fn create_threads(args: CliArgs, thread_number: usize) -> (Vec<Sender<Option
             accumulate::job(image_rx, main_sender, accumulate_log_tx);
         });
         thread_connections.push(ThreadConnection::new(
-            format!("Accumulate_{}", i),
+            format!("Heap_{}", i),
             accumulate_log_rx,
         ));
     }

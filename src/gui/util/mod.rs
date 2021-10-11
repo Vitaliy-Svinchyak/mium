@@ -1,6 +1,6 @@
 use tui::widgets::ListState;
 
-use crate::gui::app::{LogEvent, ThreadConnection};
+use crate::gui::app::{ThreadEvent, ThreadConnection};
 
 pub mod event;
 
@@ -55,7 +55,7 @@ impl StatefulList {
         self.selected = None;
     }
 
-    pub fn get_selected_logs(&self) -> Vec<LogEvent> {
+    pub fn get_selected_logs(&self) -> Vec<ThreadEvent> {
         match self.selected {
             None => {
                 vec![]

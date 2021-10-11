@@ -1,8 +1,8 @@
+use tui::{Frame, symbols};
 use tui::backend::Backend;
 use tui::layout::{Constraint, Layout, Rect};
 use tui::style::{Color, Modifier, Style};
 use tui::widgets::{Block, Borders, Gauge, Sparkline};
-use tui::{symbols, Frame};
 
 use crate::gui::app::App;
 
@@ -33,8 +33,9 @@ where
     } else {
         Color::LightGreen
     };
+
     let gauge = Gauge::default()
-        .block(Block::default().title("Gauge:"))
+        .block(Block::default().title("Overall:"))
         .gauge_style(
             Style::default()
                 .fg(progress_color)
@@ -47,7 +48,7 @@ where
 
     let progress_history = app.progress_history();
     let sparkline = Sparkline::default()
-        .block(Block::default().title("Sparkline:"))
+        .block(Block::default().title("Actions:"))
         .style(Style::default().fg(Color::Magenta))
         .data(&progress_history)
         .bar_set(symbols::bar::NINE_LEVELS);

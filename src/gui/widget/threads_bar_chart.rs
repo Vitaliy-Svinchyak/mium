@@ -36,7 +36,7 @@ where
         .collect();
 
     let barchart = MulticoloredBarChart::default()
-        .block(Block::default().borders(Borders::ALL))
+        .block(Block::default().borders(Borders::ALL).title("Thread progress"))
         .data(&data)
         .bar_width(7)
         .multi_bar_style(styles)

@@ -73,7 +73,7 @@ pub fn create_threads(
     });
 
     thread_connections.push(ThreadInfoReceiver::new(
-        "Summa".to_owned(),
+        "Sum".to_owned(),
         summarize_log_rx,
     ));
 

@@ -1,0 +1,1 @@
+pub mod multicolored_barchart;

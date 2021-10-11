@@ -26,11 +26,18 @@ where
 
     let progress = app.total_progress();
     let label = format!("{:.2}%", progress * 100.0);
+    let progress_color = if progress <= 0.3 {
+        Color::LightRed
+    } else if progress < 1.0 {
+        Color::LightYellow
+    } else {
+        Color::LightGreen
+    };
     let gauge = Gauge::default()
         .block(Block::default().title("Gauge:"))
         .gauge_style(
             Style::default()
-                .fg(Color::Magenta)
+                .fg(progress_color)
                 .bg(Color::Black)
                 .add_modifier(Modifier::ITALIC | Modifier::BOLD),
         )
@@ -41,7 +48,7 @@ where
     let progress_history = app.progress_history();
     let sparkline = Sparkline::default()
         .block(Block::default().title("Sparkline:"))
-        .style(Style::default().fg(Color::Green))
+        .style(Style::default().fg(Color::Magenta))
         .data(&progress_history)
         .bar_set(symbols::bar::NINE_LEVELS);
     f.render_widget(sparkline, chunks[1]);

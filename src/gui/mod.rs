@@ -15,6 +15,7 @@ use crate::sync::thread_info_connection::ThreadInfoReceiver;
 pub mod app;
 mod util;
 mod widget;
+mod block;
 
 pub fn main(threads: Vec<ThreadInfoReceiver>, pages: usize) -> Result<(), Box<dyn Error>> {
     let stdout = io::stdout().into_raw_mode()?;

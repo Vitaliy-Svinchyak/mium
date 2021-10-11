@@ -3,7 +3,7 @@ use std::time::Instant;
 
 use image::DynamicImage;
 
-use crate::gui::app::ThreadEvent;
+use crate::gui::sync::thread_event::ThreadEvent;
 use crate::job::accumulate;
 use crate::CliArgs;
 

@@ -4,11 +4,14 @@ use std::time::Instant;
 
 use tokio::runtime::Handle;
 
-use crate::CliArgs;
-use crate::gui::app::ThreadConnection;
+use crate::gui::sync::thread_connection::ThreadConnection;
 use crate::job::{accumulate, download, parse, summarize};
+use crate::CliArgs;
 
-pub fn create_threads(args: CliArgs, thread_number: usize) -> (Vec<Sender<Option<String>>>, Vec<ThreadConnection>) {
+pub fn create_threads(
+    args: CliArgs,
+    thread_number: usize,
+) -> (Vec<Sender<Option<String>>>, Vec<ThreadConnection>) {
     let start = Instant::now();
 
     let (result_image_tx, result_image_rx) = channel();
@@ -30,18 +33,12 @@ pub fn create_threads(args: CliArgs, thread_number: usize) -> (Vec<Sender<Option
         thread::spawn(move || {
             parse::job(query_rx, url_tx, parse_log_tx);
         });
-        thread_connections.push(ThreadConnection::new(
-            format!("Parse_{}", i),
-            parse_log_rx,
-        ));
+        thread_connections.push(ThreadConnection::new(format!("Parse_{}", i), parse_log_rx));
 
         rt.spawn(async move {
             download::job(url_rx, image_tx, download_log_tx).await;
         });
-        thread_connections.push(ThreadConnection::new(
-            format!("Get_{}", i),
-            download_log_rx,
-        ));
+        thread_connections.push(ThreadConnection::new(format!("Get_{}", i), download_log_rx));
 
         let main_sender = result_image_tx.clone();
         thread::spawn(move || {
@@ -55,11 +52,17 @@ pub fn create_threads(args: CliArgs, thread_number: usize) -> (Vec<Sender<Option
 
     let (summarize_log_tx, summarize_log_rx) = channel();
     thread::spawn(move || {
-        summarize::job(args, result_image_rx,summarize_log_tx, thread_number, start);
+        summarize::job(
+            args,
+            result_image_rx,
+            summarize_log_tx,
+            thread_number,
+            start,
+        );
     });
 
     thread_connections.push(ThreadConnection::new(
-        "Summarize".to_owned(),
+        "Summa".to_owned(),
         summarize_log_rx,
     ));
 

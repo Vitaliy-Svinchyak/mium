@@ -13,9 +13,11 @@ use tui::{
 
 use util::event::{Event, Events};
 
-use crate::gui::app::{App, ThreadConnection};
+use crate::gui::app::App;
+use crate::gui::sync::thread_connection::ThreadConnection;
 
 pub mod app;
+pub mod sync;
 mod util;
 mod widget;
 
@@ -85,7 +87,7 @@ where
     let barchart = BarChart::default()
         .block(Block::default().borders(Borders::ALL))
         .data(&data)
-        .bar_width(5)
+        .bar_width(7)
         .bar_style(Style::default().fg(Color::Yellow))
         .value_style(Style::default().fg(Color::Black).bg(Color::Yellow));
 

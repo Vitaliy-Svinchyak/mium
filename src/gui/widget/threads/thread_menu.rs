@@ -13,7 +13,13 @@ pub fn draw(items: &Vec<ThreadInfoReceiver>) -> List {
                 title = vec![title.as_str(), " [closed]"].concat();
             }
 
-            ListItem::new(Spans::from(title)).style(Style::default().fg(Color::White))
+            let style = if thread_connection.closed {
+                Style::default().fg(Color::Black).bg(Color::White)
+            } else {
+                Style::default().fg(Color::White)
+            };
+
+            ListItem::new(Spans::from(title)).style(style)
         })
         .collect();
 

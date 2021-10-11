@@ -12,7 +12,6 @@ use tui::{
 
 use util::{
     event::{Event, Events},
-    StatefulList,
 };
 use crate::gui::app::{App, ThreadConnection, LogLvl};
 
@@ -85,21 +84,10 @@ pub fn main(threads: Vec<ThreadConnection>) -> Result<(), Box<dyn Error>> {
                         LogLvl::ERROR => Style::default().fg(Color::Magenta),
                         LogLvl::CRITICAL => Style::default().fg(Color::Red),
                     };
-                    // Add a example datetime and apply proper spacing between them
-                    let header = Spans::from(vec![
-                        // Span::styled(format!("{:<9}", event.lvl), s),
-                        Span::raw(" "),
-                        Span::styled(
-                            "2020-01-01 10:00:00",
-                            Style::default().add_modifier(Modifier::ITALIC),
-                        ),
-                    ]);
-                    // The event gets its own line
-                    let log = Spans::from(vec![Span::raw(event.data.clone())]);
+                    let log = Spans::from(vec![Span::styled(event.data.clone(), s)]);
 
                     ListItem::new(vec![
                         Spans::from("-".repeat(chunks[1].width as usize)),
-                        header,
                         Spans::from(""),
                         log,
                     ])

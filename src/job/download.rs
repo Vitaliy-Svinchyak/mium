@@ -7,7 +7,9 @@ use image::io::Reader as ImageReader;
 use reqwest::header::USER_AGENT;
 use reqwest::Response;
 
-pub async fn job(rx: Receiver<Option<String>>, tx: Sender<Option<DynamicImage>>) {
+use crate::gui::app::LogEvent;
+
+pub async fn job(rx: Receiver<Option<String>>, tx: Sender<Option<DynamicImage>>, log_tx: Sender<LogEvent>) {
     let mut downloads: Vec<_> = vec![];
 
     for url in rx {
@@ -15,10 +17,13 @@ pub async fn job(rx: Receiver<Option<String>>, tx: Sender<Option<DynamicImage>>)
             None => {
                 join_all(downloads).await;
                 tx.send(None).expect("Can't send end of download channel");
+                log_tx.send(LogEvent::info("Closed.".to_owned()));
+
                 break;
             }
             Some(url) => {
                 let sender = tx.clone();
+                log_tx.send(LogEvent::info(format!("Downloading: {}", url)));
                 downloads.push(download(url, sender));
             }
         }

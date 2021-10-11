@@ -41,13 +41,17 @@ impl ThreadConnection {
     }
 
     pub fn pull(&mut self) {
-        let event = self.log_channel.try_recv();
+        loop {
+            let event = self.log_channel.try_recv();
 
-        match event {
-            Ok(e) => {
-                self.log_events.push(e);
+            match event {
+                Ok(e) => {
+                    self.log_events.push(e);
+                }
+                Err(_) => {
+                    break;
+                }
             }
-            Err(_) => {}
         }
     }
 }

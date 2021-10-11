@@ -11,6 +11,8 @@ pub fn job(rx: Receiver<Option<String>>, tx: Sender<Option<String>>, log_tx: Sen
         match query {
             None => {
                 tx.send(None).expect("Can't send end of channel");
+                log_tx.send(LogEvent::info("Closed.".to_owned()));
+
                 break;
             }
             Some(query) => {

@@ -1,14 +1,16 @@
 use std::sync::mpsc::{Receiver, Sender};
 
 use image::{DynamicImage, GenericImage, GenericImageView, Rgba};
+use crate::gui::app::LogEvent;
 
-pub fn job(rx: Receiver<Option<DynamicImage>>, tx: Sender<Option<DynamicImage>>) {
+pub fn job(rx: Receiver<Option<DynamicImage>>, tx: Sender<Option<DynamicImage>>, log_tx: Sender<LogEvent>) {
     let medium = rx.iter()
         .next()
         .expect("Can't get picture from channel");
 
     if medium.is_none() {
         tx.send(None).expect("Can't send accumulated result");
+        log_tx.send(LogEvent::info("Closed.".to_owned()));
         return;
     }
 
@@ -22,10 +24,14 @@ pub fn job(rx: Receiver<Option<DynamicImage>>, tx: Sender<Option<DynamicImage>>)
                 None => {
                     tx.send(Some(medium.clone())).expect("Can't send accumulated result");
                     tx.send(None).expect("Can't send accumulated result");
+                    log_tx.send(LogEvent::info("Closed.".to_owned()));
+
                     break;
                 }
                 Some(image) => {
                     accumulate(&image, i, &mut medium);
+                    log_tx.send(LogEvent::info(format!("Accumulated {}.", i + 1)));
+
                     i += 1;
                 }
             }

@@ -10,7 +10,6 @@ pub fn draw<B>(f: &mut Frame<B>, app: &mut App, area: Rect)
 where
     B: Backend,
 {
-    let progress = app.total_progress();
     let chunks = Layout::default()
         .constraints(
             [
@@ -22,9 +21,10 @@ where
         )
         .margin(1)
         .split(area);
-    let block = Block::default().borders(Borders::ALL).title("Graphs");
+    let block = Block::default().borders(Borders::ALL).title("Progress");
     f.render_widget(block, area);
 
+    let progress = app.total_progress();
     let label = format!("{:.2}%", progress * 100.0);
     let gauge = Gauge::default()
         .block(Block::default().title("Gauge:"))
@@ -38,10 +38,11 @@ where
         .ratio(progress);
     f.render_widget(gauge, chunks[0]);
 
+    let progress_history = app.progress_history();
     let sparkline = Sparkline::default()
         .block(Block::default().title("Sparkline:"))
         .style(Style::default().fg(Color::Green))
-        .data(&[1, 2, 3])
+        .data(&progress_history)
         .bar_set(symbols::bar::NINE_LEVELS);
     f.render_widget(sparkline, chunks[1]);
 }

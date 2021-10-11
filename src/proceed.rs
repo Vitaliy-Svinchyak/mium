@@ -1,14 +1,19 @@
 use std::sync::mpsc::{channel, Sender};
 use std::thread;
+use std::time::Instant;
 
 use image::DynamicImage;
 use tokio::runtime::Handle;
 
+use crate::CliArgs;
 use crate::gui::app::ThreadConnection;
-use crate::job::{accumulate, download, parse};
+use crate::job::{accumulate, download, parse, summarize};
 
-pub fn create_threads(result_image_tx: Sender<Option<DynamicImage>>, thread_number: usize) ->
-(Vec<Sender<Option<String>>>, Vec<ThreadConnection>) {
+pub fn create_threads(args: CliArgs, thread_number: usize) -> (Vec<Sender<Option<String>>>, Vec<ThreadConnection>) {
+    let start = Instant::now();
+
+    let (result_image_tx, result_image_rx) = channel();
+
     let rt = Handle::current();
     let mut query_senders = vec![];
     let mut thread_connections = vec![];
@@ -48,6 +53,16 @@ pub fn create_threads(result_image_tx: Sender<Option<DynamicImage>>, thread_numb
             accumulate_log_rx,
         ));
     }
+
+    let (summarize_log_tx, summarize_log_rx) = channel();
+    thread::spawn(move || {
+        summarize::job(args, result_image_rx,summarize_log_tx, thread_number, start);
+    });
+
+    thread_connections.push(ThreadConnection::new(
+        "Summarize".to_owned(),
+        summarize_log_rx,
+    ));
 
     (query_senders, thread_connections)
 }

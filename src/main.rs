@@ -7,11 +7,10 @@ use structopt::StructOpt;
 
 mod job;
 mod proceed;
-mod collect;
 mod gui;
 
-#[derive(StructOpt, Debug)]
-struct Cli {
+#[derive(StructOpt, Debug, Clone)]
+pub struct CliArgs {
     #[structopt(short, long, default_value = "anime")]
     query: String,
     #[structopt(short, long, default_value = "2")]
@@ -22,24 +21,15 @@ struct Cli {
 
 #[tokio::main]
 async fn main() {
-    let args: Cli = Cli::from_args();
+    let args: CliArgs = CliArgs::from_args();
     let max_cpus = num_cpus::get();
     let thread_number = if args.pages < max_cpus { args.pages } else { max_cpus };
 
-    let (result_image_tx, result_image_rx) = channel();
-    let start = Instant::now();
-    let (query_senders, thread_connections) = proceed::create_threads(result_image_tx, thread_number);
+    let (query_senders, thread_connections) = proceed::create_threads(args.clone(), thread_number);
 
     send_jobs(query_senders, args.pages, args.query);
 
     gui::main(thread_connections).unwrap();
-
-    let result_picture = collect::collect_result(result_image_rx, args.pages, thread_number);
-    println!("done in: {:?}", start.elapsed());
-
-    result_picture
-        .save(format!("./{}.jpeg", args.file))
-        .expect("Can't save image");
 }
 
 fn send_jobs(query_senders: Vec<Sender<Option<String>>>, pages_to_parse: usize, query: String) {

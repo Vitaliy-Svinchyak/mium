@@ -9,7 +9,7 @@ pub fn job(rx: Receiver<Option<DynamicImage>>, tx: Sender<Option<DynamicImage>>,
         .expect("Can't get picture from channel");
 
     if medium.is_none() {
-        tx.send(None).expect("Can't send accumulated result");
+        tx.send(None).expect("Can't send early result");
         log_tx.send(LogEvent::info("Closed.".to_owned()));
         return;
     }
@@ -23,7 +23,7 @@ pub fn job(rx: Receiver<Option<DynamicImage>>, tx: Sender<Option<DynamicImage>>,
             match image {
                 None => {
                     tx.send(Some(medium.clone())).expect("Can't send accumulated result");
-                    tx.send(None).expect("Can't send accumulated result");
+                    tx.send(None).expect("Can't send end result");
                     log_tx.send(LogEvent::info("Closed.".to_owned()));
 
                     break;

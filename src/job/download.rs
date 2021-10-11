@@ -7,7 +7,7 @@ use image::{DynamicImage, ImageFormat};
 use reqwest::header::USER_AGENT;
 use reqwest::Response;
 
-use crate::gui::sync::thread_event::ThreadEvent;
+use crate::sync::thread_event::ThreadEvent;
 
 pub async fn job(
     rx: Receiver<Option<String>>,

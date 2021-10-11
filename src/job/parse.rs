@@ -4,7 +4,7 @@ use reqwest::blocking::Response;
 use reqwest::header::USER_AGENT;
 use scraper::{Html, Selector};
 
-use crate::gui::sync::thread_event::ThreadEvent;
+use crate::sync::thread_event::ThreadEvent;
 
 pub fn job(rx: Receiver<Option<String>>, tx: Sender<Option<String>>, log_tx: Sender<ThreadEvent>) {
     for query in rx {

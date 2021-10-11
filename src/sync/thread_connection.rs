@@ -1,6 +1,6 @@
 use std::sync::mpsc::Receiver;
 
-use crate::gui::sync::thread_event::{EventType, ThreadEvent};
+use crate::sync::thread_event::{EventType, ThreadEvent};
 
 pub struct ThreadConnection {
     pub title: String,

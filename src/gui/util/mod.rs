@@ -1,6 +1,6 @@
 use tui::widgets::ListState;
 
-use crate::gui::sync::thread_connection::ThreadConnection;
+use crate::sync::thread_connection::ThreadConnection;
 
 pub mod event;
 

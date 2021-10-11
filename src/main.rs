@@ -7,6 +7,7 @@ use structopt::StructOpt;
 mod gui;
 mod job;
 mod proceed;
+pub mod sync;
 
 #[derive(StructOpt, Debug, Clone)]
 pub struct CliArgs {

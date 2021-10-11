@@ -2,7 +2,7 @@ use std::sync::mpsc::{Receiver, Sender};
 
 use image::{DynamicImage, GenericImage, GenericImageView, Rgba};
 
-use crate::gui::sync::thread_event::ThreadEvent;
+use crate::sync::thread_event::ThreadEvent;
 
 pub fn job(
     rx: Receiver<Option<DynamicImage>>,

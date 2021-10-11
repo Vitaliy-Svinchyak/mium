@@ -1,4 +1,4 @@
-use crate::gui::sync::thread_connection::ThreadConnection;
+use crate::sync::thread_connection::ThreadConnection;
 use crate::gui::util::StatefulList;
 
 pub(super) struct App {

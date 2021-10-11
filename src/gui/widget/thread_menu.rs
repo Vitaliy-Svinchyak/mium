@@ -2,7 +2,7 @@ use tui::style::{Color, Modifier, Style};
 use tui::text::Spans;
 use tui::widgets::{Block, Borders, List, ListItem};
 
-use crate::gui::sync::thread_connection::ThreadConnection;
+use crate::sync::thread_connection::ThreadConnection;
 
 pub fn draw(items: &Vec<ThreadConnection>) -> List {
     let thread_menu: Vec<ListItem> = items

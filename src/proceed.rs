@@ -4,7 +4,7 @@ use std::time::Instant;
 
 use tokio::runtime::Handle;
 
-use crate::gui::sync::thread_connection::ThreadConnection;
+use crate::sync::thread_connection::ThreadConnection;
 use crate::job::{accumulate, download, parse, summarize};
 use crate::CliArgs;
 

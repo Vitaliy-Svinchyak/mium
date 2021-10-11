@@ -1,23 +1,22 @@
 use std::{error::Error, io};
 
 use termion::{event::Key, input::MouseTerminal, raw::IntoRawMode, screen::AlternateScreen};
+use tui::{
+    backend::TermionBackend,
+    Frame,
+    layout::{Constraint, Direction, Layout}, Terminal,
+};
 use tui::backend::Backend;
 use tui::layout::Rect;
 use tui::style::{Color, Style};
 use tui::widgets::{BarChart, Block, Borders};
-use tui::{
-    backend::TermionBackend,
-    layout::{Constraint, Direction, Layout},
-    Frame, Terminal,
-};
 
 use util::event::{Event, Events};
 
 use crate::gui::app::App;
-use crate::gui::sync::thread_connection::ThreadConnection;
+use crate::sync::thread_connection::ThreadConnection;
 
 pub mod app;
-pub mod sync;
 mod util;
 mod widget;
 

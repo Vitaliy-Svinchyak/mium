@@ -1,4 +1,4 @@
-use std::sync::mpsc::{Receiver, RecvError};
+use std::sync::mpsc::Receiver;
 
 use crate::gui::util::StatefulList;
 
@@ -63,7 +63,7 @@ pub(super) struct App {
 impl App {
     pub fn new(items: Vec<ThreadConnection>) -> App {
         App {
-            items: StatefulList::with_items(items)
+            items: StatefulList::with_items(items),
         }
     }
 

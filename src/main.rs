@@ -1,13 +1,12 @@
 extern crate num_cpus;
 
-use std::sync::mpsc::{channel, Sender};
-use std::time::Instant;
+use std::sync::mpsc::Sender;
 
 use structopt::StructOpt;
 
+mod gui;
 mod job;
 mod proceed;
-mod gui;
 
 #[derive(StructOpt, Debug, Clone)]
 pub struct CliArgs {
@@ -23,7 +22,11 @@ pub struct CliArgs {
 async fn main() {
     let args: CliArgs = CliArgs::from_args();
     let max_cpus = num_cpus::get();
-    let thread_number = if args.pages < max_cpus { args.pages } else { max_cpus };
+    let thread_number = if args.pages < max_cpus {
+        args.pages
+    } else {
+        max_cpus
+    };
 
     let (query_senders, thread_connections) = proceed::create_threads(args.clone(), thread_number);
 
@@ -38,7 +41,9 @@ fn send_jobs(query_senders: Vec<Sender<Option<String>>>, pages_to_parse: usize, 
     for page in 1..pages_to_parse + 1 {
         let query = format!("https://www.goodfon.ru/search/?q={}&page={}", query, page);
         let query_tx = &query_senders[i];
-        query_tx.send(Some(query)).expect("Can't send query to channel");
+        query_tx
+            .send(Some(query))
+            .expect("Can't send query to channel");
 
         i += 1;
         if i == query_senders.len() {

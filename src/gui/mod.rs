@@ -3,16 +3,13 @@ use std::{error::Error, io};
 use termion::{event::Key, input::MouseTerminal, raw::IntoRawMode, screen::AlternateScreen};
 use tui::{
     backend::TermionBackend,
-    layout::{Constraint, Corner, Direction, Layout},
-    style::{Color, Modifier, Style},
-    text::{Span, Spans},
-    widgets::{Block, Borders, List, ListItem},
+    layout::{Constraint, Direction, Layout},
     Terminal,
 };
 
 use util::event::{Event, Events};
 
-use crate::gui::app::{App, LogLvl, ThreadConnection};
+use crate::gui::app::{App, ThreadConnection};
 
 pub mod app;
 mod util;

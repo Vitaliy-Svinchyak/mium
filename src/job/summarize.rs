@@ -1,5 +1,4 @@
 use std::sync::mpsc::{Receiver, Sender};
-use std::thread;
 use std::time::Instant;
 
 use image::DynamicImage;

@@ -2,7 +2,6 @@ use std::sync::mpsc::{channel, Sender};
 use std::thread;
 use std::time::Instant;
 
-use image::DynamicImage;
 use tokio::runtime::Handle;
 
 use crate::CliArgs;

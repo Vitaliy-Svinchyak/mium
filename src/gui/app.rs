@@ -1,4 +1,4 @@
-use crate::sync::thread_connection::ThreadConnection;
+use crate::sync::thread_info_connection::ThreadInfoReceiver;
 use crate::gui::util::StatefulList;
 
 pub(super) struct App {
@@ -6,7 +6,7 @@ pub(super) struct App {
 }
 
 impl App {
-    pub fn new(items: Vec<ThreadConnection>) -> App {
+    pub fn new(items: Vec<ThreadInfoReceiver>) -> App {
         App {
             items: StatefulList::with_items(items),
         }

@@ -3,7 +3,7 @@ pub enum EventType {
     INFO,
     ERROR,
     PROGRESS,
-    CLOSE,
+    CLOSED,
 }
 
 #[derive(Debug, Clone)]
@@ -20,9 +20,9 @@ impl ThreadEvent {
         }
     }
 
-    pub fn close() -> ThreadEvent {
+    pub fn closed() -> ThreadEvent {
         ThreadEvent {
-            lvl: EventType::CLOSE,
+            lvl: EventType::CLOSED,
             data: "".to_owned(),
         }
     }

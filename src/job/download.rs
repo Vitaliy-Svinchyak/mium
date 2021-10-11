@@ -7,12 +7,12 @@ use image::{DynamicImage, ImageFormat};
 use reqwest::header::USER_AGENT;
 use reqwest::Response;
 
-use crate::sync::thread_event::ThreadEvent;
+use crate::sync::thread_info_sender::ThreadInfoSender;
 
 pub async fn job(
     rx: Receiver<Option<String>>,
     tx: Sender<Option<DynamicImage>>,
-    log_tx: Sender<ThreadEvent>,
+    sender: ThreadInfoSender,
 ) {
     let mut downloads: Vec<_> = vec![];
 
@@ -21,22 +21,21 @@ pub async fn job(
             None => {
                 join_all(downloads).await;
                 tx.send(None).expect("Can't send end of download channel");
-                log_tx.send(ThreadEvent::info("Closed.".to_owned()));
-                log_tx.send(ThreadEvent::close());
+                sender.closed();
 
                 break;
             }
             Some(url) => {
-                let sender = tx.clone();
-                let log_sender = log_tx.clone();
-                log_tx.send(ThreadEvent::info(format!("Downloading: {}", url)));
-                downloads.push(download(url, sender, log_sender));
+                let image_sender = tx.clone();
+                let log_sender = sender.clone();
+                sender.info(format!("Downloading: {}", url));
+                downloads.push(download(url, image_sender, log_sender));
             }
         }
     }
 }
 
-async fn download(url: String, tx: Sender<Option<DynamicImage>>, log_tx: Sender<ThreadEvent>) {
+async fn download(url: String, tx: Sender<Option<DynamicImage>>, sender: ThreadInfoSender) {
     let response = get_request(&url).await.expect("Can't download picture");
 
     let bytes = response
@@ -45,7 +44,9 @@ async fn download(url: String, tx: Sender<Option<DynamicImage>>, log_tx: Sender<
         .expect("Can't get bytes from request")
         .to_vec();
     let image = decode(bytes);
-    log_tx.send(ThreadEvent::progress());
+
+    sender.info(format!("Downloaded: {}", url));
+    sender.progress();
 
     tx.send(Some(image)).expect("Can't send picture to channel");
 }

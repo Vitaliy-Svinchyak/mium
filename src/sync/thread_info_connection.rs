@@ -2,19 +2,19 @@ use std::sync::mpsc::Receiver;
 
 use crate::sync::thread_event::{EventType, ThreadEvent};
 
-pub struct ThreadConnection {
+pub struct ThreadInfoReceiver {
     pub title: String,
-    log_channel: Receiver<ThreadEvent>,
+    channel_receiver: Receiver<ThreadEvent>,
     pub log_events: Vec<String>,
     pub progress: u64,
     pub closed: bool,
 }
 
-impl ThreadConnection {
-    pub fn new(title: String, log_channel: Receiver<ThreadEvent>) -> ThreadConnection {
-        ThreadConnection {
+impl ThreadInfoReceiver {
+    pub fn new(title: String, channel_receiver: Receiver<ThreadEvent>) -> ThreadInfoReceiver {
+        ThreadInfoReceiver {
             title,
-            log_channel,
+            channel_receiver,
             log_events: vec![],
             progress: 0,
             closed: false,
@@ -23,7 +23,7 @@ impl ThreadConnection {
 
     pub fn pull(&mut self) {
         loop {
-            let event = self.log_channel.try_recv();
+            let event = self.channel_receiver.try_recv();
 
             match event {
                 Ok(e) => match e.lvl {
@@ -34,7 +34,7 @@ impl ThreadConnection {
                     EventType::PROGRESS => {
                         self.progress += 1;
                     }
-                    EventType::CLOSE => {
+                    EventType::CLOSED => {
                         self.closed = true;
                     }
                 },

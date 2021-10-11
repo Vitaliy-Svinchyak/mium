@@ -1,18 +1,18 @@
 use tui::widgets::ListState;
 
-use crate::sync::thread_connection::ThreadConnection;
+use crate::sync::thread_info_connection::ThreadInfoReceiver;
 
 pub mod event;
 
 pub struct StatefulList
 {
     pub state: ListState,
-    pub items: Vec<ThreadConnection>,
+    pub items: Vec<ThreadInfoReceiver>,
     pub selected: Option<usize>,
 }
 
 impl StatefulList {
-    pub fn with_items(items: Vec<ThreadConnection>) -> StatefulList {
+    pub fn with_items(items: Vec<ThreadInfoReceiver>) -> StatefulList {
         StatefulList {
             state: ListState::default(),
             items,

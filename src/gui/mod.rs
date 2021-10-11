@@ -14,13 +14,13 @@ use tui::widgets::{BarChart, Block, Borders};
 use util::event::{Event, Events};
 
 use crate::gui::app::App;
-use crate::sync::thread_connection::ThreadConnection;
+use crate::sync::thread_info_connection::ThreadInfoReceiver;
 
 pub mod app;
 mod util;
 mod widget;
 
-pub fn main(threads: Vec<ThreadConnection>) -> Result<(), Box<dyn Error>> {
+pub fn main(threads: Vec<ThreadInfoReceiver>) -> Result<(), Box<dyn Error>> {
     let stdout = io::stdout().into_raw_mode()?;
     let stdout = MouseTerminal::from(stdout);
     let stdout = AlternateScreen::from(stdout);

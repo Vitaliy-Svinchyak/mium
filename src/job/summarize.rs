@@ -1,33 +1,32 @@
-use std::sync::mpsc::{Receiver, Sender};
+use std::sync::mpsc::Receiver;
 use std::time::Instant;
 
 use image::DynamicImage;
 
-use crate::sync::thread_event::ThreadEvent;
 use crate::job::accumulate;
+use crate::sync::thread_info_sender::ThreadInfoSender;
 use crate::CliArgs;
 
 pub fn job(
     args: CliArgs,
     result_image_rx: Receiver<Option<DynamicImage>>,
-    log_tx: Sender<ThreadEvent>,
+    sender: ThreadInfoSender,
     thread_number: usize,
     start_time: Instant,
 ) {
-    let result_picture = collect_result(result_image_rx, log_tx.clone(), args.pages, thread_number);
-    log_tx.send(ThreadEvent::info(format!(
-        "Done in: {:?}",
-        start_time.elapsed()
-    )));
+    let result_picture = collect_result(result_image_rx, sender.clone(), args.pages, thread_number);
+    sender.info(format!("Done in: {:?}", start_time.elapsed()));
 
     result_picture
         .save(format!("./{}.jpeg", args.file))
         .expect("Can't save image");
+
+    sender.closed();
 }
 
 fn collect_result(
     result_image_rx: Receiver<Option<DynamicImage>>,
-    log_tx: Sender<ThreadEvent>,
+    sender: ThreadInfoSender,
     pages: usize,
     thread_number: usize,
 ) -> DynamicImage {
@@ -37,22 +36,19 @@ fn collect_result(
         if let Ok(medium_picture) = result_image_rx.recv() {
             results_received += 1;
 
-            log_tx.send(ThreadEvent::progress());
+            sender.progress();
             if let Some(medium_picture) = medium_picture {
-                log_tx.send(ThreadEvent::info("Received first image".to_owned()));
+                sender.info("Received first image".to_owned());
 
                 break medium_picture;
             }
 
-            log_tx.send(ThreadEvent::info(format!(
-                "None {} / {}",
-                results_received, thread_number
-            )));
+            sender.info(format!("None {} / {}", results_received, thread_number));
         }
     };
 
     if pages == 1 {
-        log_tx.send(ThreadEvent::close());
+        sender.closed();
         return medium_picture;
     }
 
@@ -64,14 +60,11 @@ fn collect_result(
             }
 
             results_received += 1;
-            log_tx.send(ThreadEvent::info(format!(
-                "Some {} / {}",
-                results_received, thread_number
-            )));
-            log_tx.send(ThreadEvent::progress());
+            sender.info(format!("Some {} / {}", results_received, thread_number));
+            sender.progress();
 
             if results_received == thread_number {
-                log_tx.send(ThreadEvent::close());
+                sender.closed();
 
                 medium_picture
                     .save("./result.jpeg")

@@ -4,14 +4,15 @@ use std::time::Instant;
 
 use tokio::runtime::Handle;
 
-use crate::sync::thread_connection::ThreadConnection;
 use crate::job::{accumulate, download, parse, summarize};
+use crate::sync::thread_info_connection::ThreadInfoReceiver;
+use crate::sync::thread_info_sender::ThreadInfoSender;
 use crate::CliArgs;
 
 pub fn create_threads(
     args: CliArgs,
     thread_number: usize,
-) -> (Vec<Sender<Option<String>>>, Vec<ThreadConnection>) {
+) -> (Vec<Sender<Option<String>>>, Vec<ThreadInfoReceiver>) {
     let start = Instant::now();
 
     let (result_image_tx, result_image_rx) = channel();
@@ -31,20 +32,30 @@ pub fn create_threads(
         let (accumulate_log_tx, accumulate_log_rx) = channel();
 
         thread::spawn(move || {
-            parse::job(query_rx, url_tx, parse_log_tx);
+            parse::job(query_rx, url_tx, ThreadInfoSender::new(parse_log_tx));
         });
-        thread_connections.push(ThreadConnection::new(format!("Parse_{}", i), parse_log_rx));
+        thread_connections.push(ThreadInfoReceiver::new(
+            format!("Parse_{}", i),
+            parse_log_rx,
+        ));
 
         rt.spawn(async move {
-            download::job(url_rx, image_tx, download_log_tx).await;
+            download::job(url_rx, image_tx, ThreadInfoSender::new(download_log_tx)).await;
         });
-        thread_connections.push(ThreadConnection::new(format!("Get_{}", i), download_log_rx));
+        thread_connections.push(ThreadInfoReceiver::new(
+            format!("Get_{}", i),
+            download_log_rx,
+        ));
 
         let main_sender = result_image_tx.clone();
         thread::spawn(move || {
-            accumulate::job(image_rx, main_sender, accumulate_log_tx);
+            accumulate::job(
+                image_rx,
+                main_sender,
+                ThreadInfoSender::new(accumulate_log_tx),
+            );
         });
-        thread_connections.push(ThreadConnection::new(
+        thread_connections.push(ThreadInfoReceiver::new(
             format!("Heap_{}", i),
             accumulate_log_rx,
         ));
@@ -55,13 +66,13 @@ pub fn create_threads(
         summarize::job(
             args,
             result_image_rx,
-            summarize_log_tx,
+            ThreadInfoSender::new(summarize_log_tx),
             thread_number,
             start,
         );
     });
 
-    thread_connections.push(ThreadConnection::new(
+    thread_connections.push(ThreadInfoReceiver::new(
         "Summa".to_owned(),
         summarize_log_rx,
     ));

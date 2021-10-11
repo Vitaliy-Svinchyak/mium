@@ -19,6 +19,6 @@ pub fn draw(items: &Vec<String>) -> List {
         .collect();
 
     List::new(events)
-        .block(Block::default().borders(Borders::ALL).title("List"))
+        .block(Block::default().borders(Borders::ALL).title("Thread logs"))
         .start_corner(Corner::BottomLeft)
 }

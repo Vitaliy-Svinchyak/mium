@@ -3,7 +3,6 @@ use tui::widgets::ListState;
 pub struct StatefulList<T> {
     pub state: ListState,
     pub items: Vec<T>,
-    pub selected: Option<usize>,
 }
 
 impl<T> StatefulList<T> {
@@ -11,7 +10,6 @@ impl<T> StatefulList<T> {
         StatefulList {
             state: ListState::default(),
             items,
-            selected: None,
         }
     }
 
@@ -27,7 +25,6 @@ impl<T> StatefulList<T> {
             None => 0,
         };
         self.state.select(Some(i));
-        self.selected = Some(i);
     }
 
     pub fn previous(&mut self) {
@@ -42,16 +39,18 @@ impl<T> StatefulList<T> {
             None => 0,
         };
         self.state.select(Some(i));
-        self.selected = Some(i);
     }
 
     pub fn unselect(&mut self) {
         self.state.select(None);
-        self.selected = None;
     }
 
     pub fn add(&mut self, item: T) {
         self.items.push(item);
+
+        if let Some(_) = self.state.selected() {
+            self.next();
+        }
     }
 
     pub fn len(&self) -> usize {

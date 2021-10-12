@@ -23,7 +23,7 @@ impl App {
             connection.pull();
         }
 
-        if let Some(i) = self.menu_items.selected {
+        if let Some(i) = self.menu_items.state.selected() {
             let mut last_synced = self.log_items.len();
             let connection_logs = self.menu_items.items[i].log_events.clone();
             let connection_last_synced = connection_logs.len();

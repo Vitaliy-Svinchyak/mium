@@ -17,6 +17,8 @@ pub fn job(
 
         return;
     }
+
+    sender.info("Got first.".to_owned());
     sender.progress();
 
     let mut medium = medium.unwrap();

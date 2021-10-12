@@ -8,19 +8,26 @@ use crate::gui::theme::theme_block;
 
 pub fn draw(items: &Vec<String>) -> List {
     let mut color_order = false;
+    let len = items.len();
     let events: Vec<ListItem> = items
         .iter()
         .rev()
         .enumerate()
         .map(|(i, event)| {
-            let log = Spans::from(vec![Span::styled(
-                event.clone(),
-                Style::default().bg(if color_order {
-                    Color::Rgb(43, 44, 52)
-                } else {
-                    Color::Rgb(46, 47, 58)
-                }),
-            )]);
+            let log = Spans::from(vec![
+                Span::styled(
+                    format!("[{}]", len - i),
+                    Style::default().add_modifier(Modifier::DIM),
+                ),
+                Span::styled(
+                    event.clone(),
+                    Style::default().bg(if color_order {
+                        Color::Rgb(43, 44, 52)
+                    } else {
+                        Color::Rgb(46, 47, 58)
+                    }),
+                ),
+            ]);
 
             color_order = !color_order;
 

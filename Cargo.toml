@@ -6,13 +6,13 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-reqwest = { version = "0.11.4", features = ["blocking"] }
-scraper = "0.12.0" # html parsing
+reqwest = { version = "0.11.4", features = ["blocking", "rustls-tls"], default-features = false }
+scraper = { version = "0.12.0", default-features = false }
 tokio = { version = "1.0.2", features = ["macros", "rt-multi-thread"] }
 num_cpus = "1.13.0"
-image = "0.23.14"
-futures = "0.3.17"
-structopt = { version = "0.3.22" } # daemon command line arguments into struct
+image = { version = "0.23.14", features = ["jpeg"], default-features = false }
+futures = { version = "0.3.17", default-features = false }
+structopt = { version = "0.3.22", default-features = false }
 tui = "0.16.0"
 termion = "1.5"
 unicode-width = "0.1.9"

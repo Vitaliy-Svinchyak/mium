@@ -17,13 +17,13 @@ where
         .split(area);
 
     let data: Vec<_> = app
-        .items
+        .menu_items
         .items
         .iter()
         .map(|v| (v.title.as_str(), v.progress))
         .collect();
     let styles: Vec<Style> = app
-        .items
+        .menu_items
         .items
         .iter()
         .map(|v| {

@@ -1,8 +1,9 @@
 use tui::layout::Corner;
-use tui::style::{Color, Style};
+use tui::style::{Color, Modifier, Style};
 use tui::text::Span;
 use tui::text::Spans;
 use tui::widgets::{List, ListItem};
+
 use crate::gui::theme::theme_block;
 
 pub fn draw(items: &Vec<String>) -> List {
@@ -10,7 +11,8 @@ pub fn draw(items: &Vec<String>) -> List {
     let events: Vec<ListItem> = items
         .iter()
         .rev()
-        .map(|event| {
+        .enumerate()
+        .map(|(i, event)| {
             let log = Spans::from(vec![Span::styled(
                 event.clone(),
                 Style::default().bg(if color_order {
@@ -29,4 +31,6 @@ pub fn draw(items: &Vec<String>) -> List {
     List::new(events)
         .block(theme_block("Thread logs"))
         .start_corner(Corner::BottomLeft)
+        .highlight_style(Style::default().add_modifier(Modifier::BOLD))
+        .highlight_symbol(">> ")
 }

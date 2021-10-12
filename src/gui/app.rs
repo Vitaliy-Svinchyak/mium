@@ -2,7 +2,8 @@ use crate::gui::util::StatefulList;
 use crate::sync::thread_info_connection::ThreadInfoReceiver;
 
 pub struct App {
-    pub items: StatefulList,
+    pub menu_items: StatefulList<ThreadInfoReceiver>,
+    pub log_items: StatefulList<String>,
     pages: usize,
     progress_by_tick: Vec<u64>,
 }
@@ -10,15 +11,27 @@ pub struct App {
 impl App {
     pub fn new(items: Vec<ThreadInfoReceiver>, pages: usize) -> App {
         App {
-            items: StatefulList::with_items(items),
+            menu_items: StatefulList::with_items(items),
             pages,
             progress_by_tick: vec![0],
+            log_items: StatefulList::with_items(vec![]),
         }
     }
 
     pub fn tick(&mut self) {
-        for connection in &mut self.items.items {
+        for connection in &mut self.menu_items.items {
             connection.pull();
+        }
+
+        if let Some(i) = self.menu_items.selected {
+            let mut last_synced = self.log_items.len();
+            let connection_logs = self.menu_items.items[i].log_events.clone();
+            let connection_last_synced = connection_logs.len();
+
+            while last_synced < connection_last_synced {
+                self.log_items.add(connection_logs[last_synced].clone());
+                last_synced += 1;
+            }
         }
 
         let current_progress = self.progress();
@@ -50,6 +63,9 @@ impl App {
     }
 
     fn progress(&self) -> u64 {
-        self.items.items.iter().fold(0_u64, |t, v| t + v.progress)
+        self.menu_items
+            .items
+            .iter()
+            .fold(0_u64, |t, v| t + v.progress)
     }
 }

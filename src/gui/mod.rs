@@ -13,10 +13,10 @@ use crate::gui::app::App;
 use crate::sync::thread_info_connection::ThreadInfoReceiver;
 
 pub mod app;
-mod util;
-mod widget;
 mod block;
 mod theme;
+mod util;
+mod widget;
 
 pub fn main(threads: Vec<ThreadInfoReceiver>, pages: usize) -> Result<(), Box<dyn Error>> {
     let stdout = io::stdout().into_raw_mode()?;
@@ -29,6 +29,7 @@ pub fn main(threads: Vec<ThreadInfoReceiver>, pages: usize) -> Result<(), Box<dy
 
     let mut app = App::new(threads, pages);
 
+    let mut menu_in_focus = true;
     loop {
         terminal.draw(|f| {
             let chunks = Layout::default()
@@ -53,13 +54,34 @@ pub fn main(threads: Vec<ThreadInfoReceiver>, pages: usize) -> Result<(), Box<dy
                     break;
                 }
                 Key::Left => {
-                    app.items.unselect();
+                    if menu_in_focus {
+                        app.menu_items.unselect();
+                    } else {
+                        menu_in_focus = true;
+                        app.log_items.clear();
+                    }
+                }
+                Key::Right => {
+                    if menu_in_focus {
+                        app.log_items.next();
+                        menu_in_focus = false;
+                    }
                 }
                 Key::Down => {
-                    app.items.next();
+                    if menu_in_focus {
+                        app.menu_items.next();
+                        app.log_items.clear();
+                    } else {
+                        app.log_items.previous();
+                    }
                 }
                 Key::Up => {
-                    app.items.previous();
+                    if menu_in_focus {
+                        app.menu_items.previous();
+                        app.log_items.clear();
+                    } else {
+                        app.log_items.next();
+                    }
                 }
                 _ => {}
             },

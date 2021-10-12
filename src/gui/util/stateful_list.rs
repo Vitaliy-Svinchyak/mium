@@ -1,16 +1,13 @@
 use tui::widgets::ListState;
 
-use crate::sync::thread_info_connection::ThreadInfoReceiver;
-
-pub struct StatefulList
-{
+pub struct StatefulList<T> {
     pub state: ListState,
-    pub items: Vec<ThreadInfoReceiver>,
+    pub items: Vec<T>,
     pub selected: Option<usize>,
 }
 
-impl StatefulList {
-    pub fn with_items(items: Vec<ThreadInfoReceiver>) -> StatefulList {
+impl<T> StatefulList<T> {
+    pub fn with_items(items: Vec<T>) -> StatefulList<T> {
         StatefulList {
             state: ListState::default(),
             items,
@@ -53,12 +50,16 @@ impl StatefulList {
         self.selected = None;
     }
 
-    pub fn get_selected_logs(&self) -> Vec<String> {
-        match self.selected {
-            None => {
-                vec![]
-            }
-            Some(index) => self.items[index].log_events.clone(),
-        }
+    pub fn add(&mut self, item: T) {
+        self.items.push(item);
+    }
+
+    pub fn len(&self) -> usize {
+        self.items.len()
+    }
+
+    pub fn clear(&mut self) {
+        self.unselect();
+        self.items.clear();
     }
 }

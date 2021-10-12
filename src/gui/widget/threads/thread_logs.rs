@@ -2,23 +2,31 @@ use tui::layout::Corner;
 use tui::style::{Color, Style};
 use tui::text::Span;
 use tui::text::Spans;
-use tui::widgets::{Block, Borders, List, ListItem};
+use tui::widgets::{List, ListItem};
+use crate::gui::theme::theme_block;
 
 pub fn draw(items: &Vec<String>) -> List {
+    let mut color_order = false;
     let events: Vec<ListItem> = items
         .iter()
         .rev()
         .map(|event| {
             let log = Spans::from(vec![Span::styled(
                 event.clone(),
-                Style::default().fg(Color::Blue),
+                Style::default().bg(if color_order {
+                    Color::Rgb(43, 44, 52)
+                } else {
+                    Color::Rgb(46, 47, 58)
+                }),
             )]);
 
-            ListItem::new(vec![Spans::from(""), log])
+            color_order = !color_order;
+
+            ListItem::new(log)
         })
         .collect();
 
     List::new(events)
-        .block(Block::default().borders(Borders::ALL).title("Thread logs"))
+        .block(theme_block("Thread logs"))
         .start_corner(Corner::BottomLeft)
 }

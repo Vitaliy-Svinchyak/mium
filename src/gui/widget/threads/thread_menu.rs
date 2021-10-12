@@ -1,7 +1,8 @@
 use tui::style::{Color, Modifier, Style};
 use tui::text::Spans;
-use tui::widgets::{Block, Borders, List, ListItem};
+use tui::widgets::{List, ListItem};
 
+use crate::gui::theme::{theme_block, THEME};
 use crate::sync::thread_info_connection::ThreadInfoReceiver;
 
 pub fn draw(items: &Vec<ThreadInfoReceiver>) -> List {
@@ -14,9 +15,9 @@ pub fn draw(items: &Vec<ThreadInfoReceiver>) -> List {
             }
 
             let style = if thread_connection.closed {
-                Style::default().fg(Color::Black).bg(Color::White)
+                Style::default().fg(Color::Black).bg(THEME.green)
             } else {
-                Style::default().fg(Color::White)
+                Style::default().fg(THEME.white_text)
             };
 
             ListItem::new(Spans::from(title)).style(style)
@@ -24,10 +25,10 @@ pub fn draw(items: &Vec<ThreadInfoReceiver>) -> List {
         .collect();
 
     List::new(thread_menu)
-        .block(Block::default().borders(Borders::ALL).title("Threads"))
+        .block(theme_block("Threads"))
         .highlight_style(
             Style::default()
-                .bg(Color::LightGreen)
+                .bg(THEME.contrast)
                 .add_modifier(Modifier::BOLD),
         )
         .highlight_symbol(">> ")

@@ -16,6 +16,7 @@ pub mod app;
 mod util;
 mod widget;
 mod block;
+mod theme;
 
 pub fn main(threads: Vec<ThreadInfoReceiver>, pages: usize) -> Result<(), Box<dyn Error>> {
     let stdout = io::stdout().into_raw_mode()?;

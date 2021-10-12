@@ -4,8 +4,7 @@ use tui::widgets::{Block, BorderType, Borders};
 
 pub struct Theme {
     pub green: Color,
-    pub blue: Color,
-    pub orange: Color,
+    pub yellow: Color,
     pub red: Color,
     pub contrast: Color,
     pub border: Color,
@@ -13,10 +12,9 @@ pub struct Theme {
 }
 
 pub static THEME: Theme = Theme {
-    green: Color::Rgb(114, 156, 162),
-    blue: Color::Rgb(70, 87, 206),
-    orange: Color::Rgb(255, 137, 59),
-    red: Color::Rgb(252, 68, 34),
+    green: Color::Rgb(70, 166, 100),
+    yellow: Color::Rgb(254, 188, 88),
+    red: Color::Rgb(248, 76, 72),
     contrast: Color::Rgb(225, 69, 145),
     border: Color::Rgb(111, 111, 111),
     white_text: Color::Rgb(205, 205, 205),

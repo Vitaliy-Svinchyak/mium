@@ -29,7 +29,7 @@ where
     let progress_color = if progress <= 0.5 {
         THEME.red
     } else if progress < 1.0 {
-        THEME.orange
+        THEME.yellow
     } else {
         THEME.green
     };

@@ -30,7 +30,7 @@ where
             if v.closed {
                 Style::default().fg(THEME.green)
             } else {
-                Style::default().fg(THEME.orange)
+                Style::default().fg(THEME.yellow)
             }
         })
         .collect();

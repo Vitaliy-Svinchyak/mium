@@ -9,6 +9,7 @@ pub struct App {
     pub menu_items: StatefulList<ThreadInfoReceiver>,
     pub log_items: StatefulList<String>,
     pub result_image: Option<RgbaImage>,
+    pub menu_in_focus: bool,
     pages: usize,
     progress_by_tick: Vec<u64>,
 }
@@ -20,6 +21,7 @@ impl App {
             menu_items: StatefulList::with_items(items),
             pages,
             result_image: None,
+            menu_in_focus: true,
             progress_by_tick: vec![0],
             log_items: StatefulList::with_items(vec![]),
         }

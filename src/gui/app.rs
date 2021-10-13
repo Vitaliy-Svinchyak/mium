@@ -1,7 +1,9 @@
+use crate::gui::util::tabs_state::TabsState;
 use crate::gui::util::StatefulList;
 use crate::sync::thread_info_connection::ThreadInfoReceiver;
 
 pub struct App {
+    pub tabs: TabsState,
     pub menu_items: StatefulList<ThreadInfoReceiver>,
     pub log_items: StatefulList<String>,
     pages: usize,
@@ -11,6 +13,7 @@ pub struct App {
 impl App {
     pub fn new(items: Vec<ThreadInfoReceiver>, pages: usize) -> App {
         App {
+            tabs: TabsState::new(vec!["Progress[1]".to_owned(), "Result[2]".to_owned()]),
             menu_items: StatefulList::with_items(items),
             pages,
             progress_by_tick: vec![0],

@@ -1,4 +1,4 @@
-use std::sync::mpsc::{channel, Sender};
+use std::sync::mpsc::{channel, Sender, Receiver};
 use std::thread;
 use std::time::Instant;
 
@@ -8,14 +8,16 @@ use crate::job::{accumulate, download, parse, summarize};
 use crate::sync::thread_info_connection::ThreadInfoReceiver;
 use crate::sync::thread_info_sender::ThreadInfoSender;
 use crate::CliArgs;
+use image::DynamicImage;
 
 pub fn create_threads(
     args: CliArgs,
     thread_number: usize,
-) -> (Vec<Sender<Option<String>>>, Vec<ThreadInfoReceiver>) {
+) -> (Vec<Sender<Option<String>>>, Vec<ThreadInfoReceiver>, Receiver<DynamicImage>) {
     let start = Instant::now();
 
     let (result_image_tx, result_image_rx) = channel();
+    let (result_image_tx_out, result_image_rx_out) = channel();
 
     let rt = Handle::current();
     let mut query_senders = vec![];
@@ -66,6 +68,7 @@ pub fn create_threads(
         summarize::job(
             args,
             result_image_rx,
+            result_image_tx_out,
             ThreadInfoSender::new(summarize_log_tx),
             thread_number,
             start,
@@ -77,5 +80,5 @@ pub fn create_threads(
         summarize_log_rx,
     ));
 
-    (query_senders, thread_connections)
+    (query_senders, thread_connections, result_image_rx_out)
 }

@@ -29,11 +29,11 @@ async fn main() {
         max_cpus
     };
 
-    let (query_senders, thread_connections) = proceed::create_threads(args.clone(), thread_number);
+    let (query_senders, thread_connections, image_rx) = proceed::create_threads(args.clone(), thread_number);
 
     send_jobs(query_senders, args.pages, args.query);
 
-    gui::main(thread_connections, args.pages).unwrap();
+    gui::main(thread_connections, args.pages, image_rx).unwrap();
 }
 
 fn send_jobs(query_senders: Vec<Sender<Option<String>>>, pages_to_parse: usize, query: String) {

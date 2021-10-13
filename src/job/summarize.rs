@@ -1,4 +1,4 @@
-use std::sync::mpsc::Receiver;
+use std::sync::mpsc::{Receiver, Sender};
 use std::time::Instant;
 
 use image::DynamicImage;
@@ -10,6 +10,7 @@ use crate::CliArgs;
 pub fn job(
     args: CliArgs,
     result_image_rx: Receiver<Option<DynamicImage>>,
+    result_image_tx: Sender<DynamicImage>,
     sender: ThreadInfoSender,
     thread_number: usize,
     start_time: Instant,
@@ -21,6 +22,7 @@ pub fn job(
         .save(format!("./{}.jpeg", args.file))
         .expect("Can't save image");
 
+    result_image_tx.send(result_picture).expect("Can't send result picture to ui");
     sender.closed();
 }
 

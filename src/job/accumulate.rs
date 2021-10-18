@@ -10,7 +10,13 @@ pub fn job(
     tx: Sender<Option<DynamicImage>>,
     sender: ThreadInfoSender,
 ) {
-    let medium = rx.iter().next().expect("Can't get picture from channel");
+    let medium = match rx.iter().next().context("Can't get picture from channel") {
+        Ok(i) => i,
+        Err(e) => {
+            sender.error(e);
+            None
+        }
+    };
 
     if medium.is_none() {
         if let Err(e) = tx.send(None).context("Can't send early result") {

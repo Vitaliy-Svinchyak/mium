@@ -11,7 +11,10 @@ pub fn job(rx: Receiver<Option<String>>, tx: Sender<Option<String>>, sender: Thr
     for query in rx {
         match query {
             None => {
-                tx.send(None).expect("Can't send end of channel");
+                match tx.send(None).context("Can't send end of channel") {
+                    Ok(_) => {}
+                    Err(e) => sender.error(e),
+                }
                 sender.closed();
 
                 break;
@@ -25,24 +28,26 @@ pub fn job(rx: Receiver<Option<String>>, tx: Sender<Option<String>>, sender: Thr
                         sender.progress();
 
                         for url in urls {
-                            tx.send(Some(url)).expect("Can't send url to channel");
+                            match tx.send(Some(url)).context("Can't send url to channel") {
+                                Ok(_) => {}
+                                Err(e) => sender.error(e),
+                            }
                         }
                     }
                     Err(e) => {
                         sender.error(e);
                     }
                 }
-
             }
         }
     }
 }
 
 fn parse(query: &str) -> Result<Vec<String>> {
-    let response = get_request(query).with_context(|| format!("Failed to get query {}", query))?;
+    let response = get_request(query).context(format!("Failed to get query {}", query))?;
     let data = response
         .text()
-        .with_context(|| format!("Failed to get data from request {}", query))?;
+        .context(format!("Failed to get data from request {}", query))?;
     let document = Html::parse_document(&data);
     let selector = Selector::parse("img.wallpapers__item__img").expect("Failed to parse selector");
     let pictures = document.select(&selector);

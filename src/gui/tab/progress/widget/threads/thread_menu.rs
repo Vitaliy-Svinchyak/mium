@@ -10,11 +10,16 @@ pub fn draw(items: &Vec<ThreadInfoReceiver>) -> List {
         .iter()
         .map(|thread_connection| {
             let mut title = thread_connection.title.clone();
-            if thread_connection.closed {
+
+            if thread_connection.has_errors() {
+                title = vec![title.as_str(), " [failed]"].concat();
+            } else if thread_connection.closed {
                 title = vec![title.as_str(), " [closed]"].concat();
             }
 
-            let style = if thread_connection.closed {
+            let style = if thread_connection.has_errors() {
+                Style::default().fg(Color::Black).bg(THEME.red)
+            } else if thread_connection.closed {
                 Style::default().fg(Color::Black).bg(THEME.green)
             } else {
                 Style::default().fg(THEME.white_text)

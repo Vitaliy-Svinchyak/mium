@@ -4,9 +4,10 @@ use tui::text::Span;
 use tui::text::Spans;
 use tui::widgets::{List, ListItem};
 
-use crate::gui::theme::theme_block;
+use crate::gui::theme::{theme_block, THEME};
+use crate::sync::thread_info_connection::TypedLog;
 
-pub fn draw(items: &Vec<String>) -> List {
+pub fn draw(items: &Vec<TypedLog>) -> List {
     let mut color_order = false;
     let len = items.len();
     let events: Vec<ListItem> = items
@@ -20,8 +21,10 @@ pub fn draw(items: &Vec<String>) -> List {
                     Style::default().add_modifier(Modifier::DIM),
                 ),
                 Span::styled(
-                    event.clone(),
-                    Style::default().bg(if color_order {
+                    event.clone().data(),
+                    Style::default().bg(if event.is_error() {
+                        THEME.red
+                    } else if color_order {
                         Color::Rgb(43, 44, 52)
                     } else {
                         Color::Rgb(46, 47, 58)

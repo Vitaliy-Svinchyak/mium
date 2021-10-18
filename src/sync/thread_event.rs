@@ -33,4 +33,11 @@ impl ThreadEvent {
             data,
         }
     }
+
+    pub fn error(data: String) -> ThreadEvent {
+        ThreadEvent {
+            lvl: EventType::ERROR,
+            data,
+        }
+    }
 }

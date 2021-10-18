@@ -27,7 +27,9 @@ where
         .items
         .iter()
         .map(|v| {
-            if v.closed {
+            if v.has_errors() {
+                Style::default().fg(THEME.red)
+            } else if v.closed {
                 Style::default().fg(THEME.green)
             } else {
                 Style::default().fg(THEME.yellow)

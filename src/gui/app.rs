@@ -2,12 +2,12 @@ use image::RgbaImage;
 
 use crate::gui::util::tabs_state::TabsState;
 use crate::gui::util::StatefulList;
-use crate::sync::thread_info_connection::ThreadInfoReceiver;
+use crate::sync::thread_info_connection::{ThreadInfoReceiver, TypedLog};
 
 pub struct App {
     pub tabs: TabsState,
     pub menu_items: StatefulList<ThreadInfoReceiver>,
-    pub log_items: StatefulList<String>,
+    pub log_items: StatefulList<TypedLog>,
     pub result_image: Option<RgbaImage>,
     pub menu_in_focus: bool,
     pages: usize,

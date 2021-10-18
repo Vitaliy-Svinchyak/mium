@@ -29,7 +29,8 @@ async fn main() {
         max_cpus
     };
 
-    let (query_senders, thread_connections, image_rx) = proceed::create_threads(args.clone(), thread_number);
+    let (query_senders, thread_connections, image_rx) =
+        proceed::create_threads(args.clone(), thread_number);
 
     send_jobs(query_senders, args.pages, args.query);
 

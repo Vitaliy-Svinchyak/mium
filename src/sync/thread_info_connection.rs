@@ -26,6 +26,7 @@ impl TypedLog {
 
 pub struct ThreadInfoReceiver {
     pub title: String,
+    pub short_title: String,
     channel_receiver: Receiver<ThreadEvent>,
     pub log_events: Vec<TypedLog>,
     pub progress: u64,
@@ -33,9 +34,10 @@ pub struct ThreadInfoReceiver {
 }
 
 impl ThreadInfoReceiver {
-    pub fn new(title: String, channel_receiver: Receiver<ThreadEvent>) -> ThreadInfoReceiver {
+    pub fn new(title: String, short_title: String, channel_receiver: Receiver<ThreadEvent>) -> ThreadInfoReceiver {
         ThreadInfoReceiver {
             title,
+            short_title,
             channel_receiver,
             log_events: vec![],
             progress: 0,

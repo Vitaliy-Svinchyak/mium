@@ -38,6 +38,7 @@ pub fn create_threads(
         });
         thread_connections.push(ThreadInfoReceiver::new(
             format!("Parse_{}", i),
+            format!("P{}", i),
             parse_log_rx,
         ));
 
@@ -46,6 +47,7 @@ pub fn create_threads(
         });
         thread_connections.push(ThreadInfoReceiver::new(
             format!("Get_{}", i),
+            format!("G{}", i),
             download_log_rx,
         ));
 
@@ -59,6 +61,7 @@ pub fn create_threads(
         });
         thread_connections.push(ThreadInfoReceiver::new(
             format!("Heap_{}", i),
+            format!("H{}", i),
             accumulate_log_rx,
         ));
     }
@@ -76,6 +79,7 @@ pub fn create_threads(
     });
 
     thread_connections.push(ThreadInfoReceiver::new(
+        "Summarize".to_owned(),
         "Sum".to_owned(),
         summarize_log_rx,
     ));

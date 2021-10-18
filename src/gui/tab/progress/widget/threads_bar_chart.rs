@@ -20,7 +20,7 @@ where
         .menu_items
         .items
         .iter()
-        .map(|v| (v.title.as_str(), v.progress))
+        .map(|v| (v.short_title.as_str(), v.progress))
         .collect();
     let styles: Vec<Style> = app
         .menu_items
@@ -40,7 +40,7 @@ where
     let barchart = MulticoloredBarChart::default()
         .block(theme_block("Thread progress"))
         .data(&data)
-        .bar_width(7)
+        .bar_width(5)
         .multi_bar_style(styles)
         .max(24)
         .value_style(Style::default().fg(THEME.white_text));

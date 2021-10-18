@@ -1,6 +1,7 @@
 use std::sync::mpsc::{Receiver, Sender};
 use std::time::Instant;
 
+use anyhow::Context;
 use image::DynamicImage;
 
 use crate::job::accumulate;
@@ -15,15 +16,44 @@ pub fn job(
     thread_number: usize,
     start_time: Instant,
 ) {
-    let result_picture = collect_result(result_image_rx, sender.clone(), args.pages, thread_number);
+    match collect_and_send(
+        args,
+        result_image_rx,
+        result_image_tx,
+        &sender,
+        thread_number,
+        start_time,
+    ) {
+        Ok(_) => {}
+        Err(e) => {
+            sender.error(e);
+        }
+    };
+
+    sender.closed();
+}
+
+fn collect_and_send(
+    args: CliArgs,
+    result_image_rx: Receiver<Option<DynamicImage>>,
+    result_image_tx: Sender<DynamicImage>,
+    sender: &ThreadInfoSender,
+    thread_number: usize,
+    start_time: Instant,
+) -> anyhow::Result<()> {
+    let result_picture =
+        collect_result(result_image_rx, sender.clone(), args.pages, thread_number)?;
     sender.info(format!("Done in: {:?}", start_time.elapsed()));
 
     result_picture
         .save(format!("./{}.jpeg", args.file))
-        .expect("Can't save image");
+        .context("Can't save image")?;
 
-    result_image_tx.send(result_picture).expect("Can't send result picture to ui");
-    sender.closed();
+    result_image_tx
+        .send(result_picture)
+        .context("Can't send result picture to ui")?;
+
+    Ok(())
 }
 
 fn collect_result(
@@ -31,7 +61,7 @@ fn collect_result(
     sender: ThreadInfoSender,
     pages: usize,
     thread_number: usize,
-) -> DynamicImage {
+) -> anyhow::Result<DynamicImage> {
     let mut results_received = 0;
     let mut valid_results_received = 1;
     let mut medium_picture = loop {
@@ -51,7 +81,7 @@ fn collect_result(
 
     if pages == 1 {
         sender.closed();
-        return medium_picture;
+        return Ok(medium_picture);
     }
 
     loop {
@@ -68,9 +98,9 @@ fn collect_result(
             if results_received == thread_number {
                 medium_picture
                     .save("./result.jpeg")
-                    .expect("Can't save image");
+                    .context("Can't save image")?;
 
-                break medium_picture;
+                break Ok(medium_picture);
             }
         }
     }

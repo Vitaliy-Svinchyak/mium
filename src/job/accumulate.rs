@@ -1,5 +1,6 @@
 use std::sync::mpsc::{Receiver, Sender};
 
+use anyhow::Context;
 use image::{DynamicImage, GenericImage, GenericImageView, Rgba};
 
 use crate::sync::thread_info_sender::ThreadInfoSender;
@@ -12,7 +13,9 @@ pub fn job(
     let medium = rx.iter().next().expect("Can't get picture from channel");
 
     if medium.is_none() {
-        tx.send(None).expect("Can't send early result");
+        if let Err(e) = tx.send(None).context("Can't send early result") {
+            sender.error(e);
+        }
         sender.closed();
 
         return;
@@ -29,9 +32,21 @@ pub fn job(
         for image in &rx {
             match image {
                 None => {
-                    tx.send(Some(medium.clone()))
-                        .expect("Can't send accumulated result");
-                    tx.send(None).expect("Can't send end result");
+                    match tx
+                        .send(Some(medium.clone()))
+                        .context("Can't send accumulated result")
+                    {
+                        Ok(_) => {}
+                        Err(e) => {
+                            sender.error(e);
+                        }
+                    }
+                    match tx.send(None).context("Can't send end result") {
+                        Ok(_) => {}
+                        Err(e) => {
+                            sender.error(e);
+                        }
+                    }
                     sender.closed();
 
                     break;

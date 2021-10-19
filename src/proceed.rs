@@ -2,7 +2,7 @@ use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
 use std::time::Instant;
 
-use crossbeam_channel::{unbounded, bounded};
+use crossbeam_channel::bounded;
 use image::DynamicImage;
 use tokio::runtime::Handle;
 
@@ -29,9 +29,7 @@ pub fn create_threads(
     let mut query_senders = vec![];
     let mut thread_connections = vec![];
 
-    let (image_tx, image_rx) = channel();
-    let (image_tx2, image_rx2) = bounded(1);
-    let mut image_broadcaster = ThreadBroadcaster::new(image_rx, image_tx2, thread_number);
+    let (image_tx, mut image_broadcaster, image_rx2) = ThreadBroadcaster::all_in_one(thread_number);
     thread::spawn(move || {
         image_broadcaster.tick();
     });

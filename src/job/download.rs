@@ -1,14 +1,14 @@
 use std::io::Cursor;
 use std::sync::mpsc::Sender;
 
-use anyhow::{Context, Error, Result};
-use futures::future::join_all;
+use anyhow::{Context, Result};
+use crossbeam_channel::Receiver;
+use futures_util::future::join_all;
 use image::io::Reader as ImageReader;
 use image::{DynamicImage, ImageFormat};
 use reqwest::header::USER_AGENT;
 
 use crate::sync::thread_info_sender::ThreadInfoSender;
-use crossbeam_channel::Receiver;
 
 pub async fn job(
     rx: Receiver<Option<String>>,
@@ -77,7 +77,7 @@ async fn get_request(url: &str) -> Result<Vec<u8>> {
 
     let req = client.get(url).header(USER_AGENT, "dick from the mountain");
 
-    let response = req.send().await.map_err(Error::msg)?;
+    let response = req.send().await.context("Can't send request")?;
 
     Ok(response
         .bytes()

@@ -15,7 +15,7 @@ impl<T> ThreadBroadcaster<T>
 where
     T: Send + 'static,
 {
-    pub fn all_in_one(threads_amount: usize) -> (StdSender<Option<T>>, Receiver<Option<T>>) {
+    pub fn new(threads_amount: usize) -> (StdSender<Option<T>>, Receiver<Option<T>>) {
         let (std_s, std_r) = channel();
         let (s, r) = bounded(threads_amount);
 
@@ -61,5 +61,5 @@ pub fn broadcast_channel<T>(threads_amount: usize) -> (StdSender<Option<T>>, Rec
 where
     T: Send + 'static,
 {
-    ThreadBroadcaster::all_in_one(threads_amount)
+    ThreadBroadcaster::new(threads_amount)
 }

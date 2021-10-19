@@ -1,71 +1,89 @@
 use std::sync::mpsc::{Receiver, Sender};
 
-use anyhow::{Context, Error, Result};
-use reqwest::blocking::Response;
+use anyhow::{Context, Result};
+use futures_util::future::join_all;
 use reqwest::header::USER_AGENT;
 use scraper::{Html, Selector};
 
 use crate::sync::thread_info_sender::ThreadInfoSender;
 
-pub fn job(rx: Receiver<Option<String>>, tx: Sender<Option<String>>, sender: ThreadInfoSender) {
+pub async fn job(
+    rx: Receiver<Option<String>>,
+    tx: Sender<Option<String>>,
+    sender: ThreadInfoSender,
+) {
+    let mut downloads = vec![];
+
     for query in rx {
         match query {
             None => {
-                match tx.send(None).context("Can't send end of channel") {
-                    Ok(_) => {}
-                    Err(e) => sender.error(e),
+                join_all(downloads).await;
+                let send_result = tx.send(None).context("Can't send end of parse channel");
+                if let Err(e) = send_result {
+                    sender.error(e);
                 }
                 sender.closed();
 
                 break;
             }
             Some(query) => {
+                let image_sender = tx.clone();
+                let log_sender = sender.clone();
                 sender.info(format!("Parsing {}", query));
-
-                match parse(&query) {
-                    Ok(urls) => {
-                        sender.info(format!("Parsed {}. Found {} pictures", query, urls.len()));
-                        sender.progress();
-
-                        for url in urls {
-                            match tx.send(Some(url)).context("Can't send url to channel") {
-                                Ok(_) => {}
-                                Err(e) => sender.error(e),
-                            }
-                        }
-                    }
-                    Err(e) => {
-                        sender.error(e);
-                    }
-                }
+                downloads.push(do_job(query, image_sender, log_sender));
             }
         }
     }
 }
 
-fn parse(query: &str) -> Result<Vec<String>> {
-    let response = get_request(query).context(format!("Failed to get query {}", query))?;
-    let data = response
-        .text()
-        .context(format!("Failed to get data from request {}", query))?;
+async fn do_job(query: String, tx: Sender<Option<String>>, sender: ThreadInfoSender) {
+    match parse(&query, tx).await {
+        Ok(_) => {
+            sender.info(format!("Parsed {}", query));
+            sender.progress();
+        }
+        Err(e) => {
+            sender.progress();
+            sender.error(e);
+        }
+    }
+}
+
+async fn parse(query: &str, tx: Sender<Option<String>>) -> Result<()> {
+    let data = get_request(query)
+        .await
+        .context(format!("Failed to get query {}", query))?;
+    let urls = extract_urls(data);
+
+    for url in urls {
+        tx.send(Some(url)).context("Can't send url to channel")?;
+    }
+
+    Ok(())
+}
+
+fn extract_urls(data: String) -> Vec<String> {
     let document = Html::parse_document(&data);
     let selector = Selector::parse("img.wallpapers__item__img").expect("Failed to parse selector");
     let pictures = document.select(&selector);
-    let urls: Vec<String> = pictures
+
+    pictures
         .map(|v| v.value().attr("src"))
         .flatten()
         .map(|v| v.to_owned())
-        .collect();
-
-    Ok(urls)
+        .collect()
 }
 
-fn get_request(url: &str) -> Result<Response> {
-    let client = reqwest::blocking::Client::builder()
+async fn get_request(url: &str) -> Result<String> {
+    let client = reqwest::Client::builder()
         .build()
         .context("Can't build client")?;
 
     let req = client.get(url).header(USER_AGENT, "dick from the mountain");
 
-    req.send().map_err(Error::msg)
+    let r = req.send().await.context("Can't send request")?;
+
+    r.text()
+        .await
+        .context(format!("Failed to get data from request {}", url))
 }

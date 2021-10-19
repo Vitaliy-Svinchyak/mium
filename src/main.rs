@@ -19,7 +19,7 @@ pub struct CliArgs {
     file: String,
 }
 
-#[tokio::main(flavor = "multi_thread", worker_threads = 2)]
+#[tokio::main(flavor = "multi_thread", worker_threads = 10)]
 async fn main() {
     let args: CliArgs = CliArgs::from_args();
     let max_cpus = num_cpus::get();

@@ -79,7 +79,8 @@ async fn get_request(url: &str) -> Result<String> {
         .build()
         .context("Can't build client")?;
 
-    let req = client.get(url).header(USER_AGENT, "dick from the mountain");
+    let req = client.get(url)
+        .header(USER_AGENT, "dick from the mountain");
 
     let r = req.send().await.context("Can't send request")?;
 

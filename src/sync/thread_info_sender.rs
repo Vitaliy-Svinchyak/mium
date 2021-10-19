@@ -17,7 +17,7 @@ impl ThreadInfoSender {
     pub fn error(&self, data: Error) {
         self.channel_receiver
             .send(ThreadEvent::error(data.to_string()))
-            .expect("Can't send info event");
+            .expect("Can't send error event");
     }
 
     pub fn info(&self, data: String) {

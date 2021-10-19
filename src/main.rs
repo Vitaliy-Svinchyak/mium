@@ -4,9 +4,10 @@ use std::sync::mpsc::Sender;
 
 use structopt::StructOpt;
 
+use job::proceed;
+
 mod gui;
 mod job;
-mod proceed;
 pub mod sync;
 
 #[derive(StructOpt, Debug, Clone)]

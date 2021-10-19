@@ -11,7 +11,7 @@ use crate::sync::thread_info_sender::ThreadInfoSender;
 pub fn thread(
     rx: Receiver<Option<DynamicImage>>,
     tx: Sender<Option<DynamicImage>>,
-    i: usize
+    i: usize,
 ) -> ThreadInfoReceiver {
     let (accumulate_log_tx, accumulate_log_rx) = channel();
 
@@ -88,16 +88,11 @@ fn job(
 }
 
 pub fn accumulate(image: &DynamicImage, iteration: usize, medium_image: &mut DynamicImage) {
-    let (imgx, imgy) = image.dimensions();
+    for (x, y, Rgba(pixel)) in image.pixels() {
+        let Rgba(medium_pixel) = medium_image.get_pixel(x, y);
+        let new_pixel = calculate_new_color(pixel, medium_pixel, iteration);
 
-    for x in 0..imgx {
-        for y in 0..imgy {
-            let Rgba(pixel) = image.get_pixel(x, y);
-            let Rgba(medium_pixel) = medium_image.get_pixel(x, y);
-            let new_pixel = calculate_new_color(pixel, medium_pixel, iteration);
-
-            medium_image.put_pixel(x, y, new_pixel);
-        }
+        medium_image.put_pixel(x, y, new_pixel);
     }
 }
 

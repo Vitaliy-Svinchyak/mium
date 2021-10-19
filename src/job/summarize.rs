@@ -20,44 +20,27 @@ pub fn thread(
     let (summarize_log_tx, summarize_log_rx) = channel();
 
     thread::spawn(move || {
-        job(
+        let sender = ThreadInfoSender::new(summarize_log_tx);
+        match collect_and_send(
             args,
             rx,
             result_image_tx_out,
-            ThreadInfoSender::new(summarize_log_tx),
+            &sender,
             thread_number,
             start,
-        );
+        ) {
+            Ok(_) => {}
+            Err(e) => {
+                sender.error(e);
+            }
+        };
+
+        sender.closed();
     });
 
     let thread_receiver =
         ThreadInfoReceiver::new("Summarize".to_owned(), "Sum".to_owned(), summarize_log_rx);
     (thread_receiver, result_image_rx_out)
-}
-
-fn job(
-    args: CliArgs,
-    result_image_rx: Receiver<Option<DynamicImage>>,
-    result_image_tx: Sender<DynamicImage>,
-    sender: ThreadInfoSender,
-    thread_number: usize,
-    start_time: Instant,
-) {
-    match collect_and_send(
-        args,
-        result_image_rx,
-        result_image_tx,
-        &sender,
-        thread_number,
-        start_time,
-    ) {
-        Ok(_) => {}
-        Err(e) => {
-            sender.error(e);
-        }
-    };
-
-    sender.closed();
 }
 
 fn collect_and_send(

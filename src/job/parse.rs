@@ -8,6 +8,7 @@ use scraper::{Html, Selector};
 
 use crate::sync::thread_info_connection::ThreadInfoReceiver;
 use crate::sync::thread_info_sender::ThreadInfoSender;
+use std::time::Instant;
 
 pub fn thread(rx: Receiver<Option<String>>, tx: Sender<Option<String>>) -> ThreadInfoReceiver {
     let (parse_log_tx, parse_log_rx) = channel();
@@ -27,6 +28,7 @@ pub fn thread(rx: Receiver<Option<String>>, tx: Sender<Option<String>>) -> Threa
 
 async fn job(rx: Receiver<Option<String>>, tx: Sender<Option<String>>, sender: ThreadInfoSender) {
     let mut downloads = vec![];
+    let start = Instant::now();
 
     for query in rx {
         match query {
@@ -48,6 +50,8 @@ async fn job(rx: Receiver<Option<String>>, tx: Sender<Option<String>>, sender: T
             }
         }
     }
+
+    sender.info(format!("Done in: {:?}", start.elapsed()));
 }
 
 async fn do_job(query: String, tx: Sender<Option<String>>, sender: ThreadInfoSender) {

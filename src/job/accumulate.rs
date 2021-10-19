@@ -1,12 +1,28 @@
-use std::sync::mpsc::Sender;
+use std::sync::mpsc::{channel, Sender};
+use std::thread;
 
 use anyhow::Context;
 use crossbeam_channel::Receiver;
 use image::{DynamicImage, GenericImage, GenericImageView, Rgba};
 
+use crate::sync::thread_info_connection::ThreadInfoReceiver;
 use crate::sync::thread_info_sender::ThreadInfoSender;
 
-pub fn job(
+pub fn thread(
+    rx: Receiver<Option<DynamicImage>>,
+    tx: Sender<Option<DynamicImage>>,
+    i: usize
+) -> ThreadInfoReceiver {
+    let (accumulate_log_tx, accumulate_log_rx) = channel();
+
+    thread::spawn(move || {
+        job(rx, tx, ThreadInfoSender::new(accumulate_log_tx));
+    });
+
+    ThreadInfoReceiver::new(format!("Heap_{}", i), format!("H{}", i), accumulate_log_rx)
+}
+
+fn job(
     rx: Receiver<Option<DynamicImage>>,
     tx: Sender<Option<DynamicImage>>,
     sender: ThreadInfoSender,

@@ -20,9 +20,7 @@ pub fn create_threads(
     Receiver<DynamicImage>,
 ) {
     let start = Instant::now();
-
-    let (result_image_tx, result_image_rx) = channel();
-    let (result_image_tx_out, result_image_rx_out) = channel();
+    let (result_image_s, result_image_r) = channel();
 
     let rt = Handle::current();
     let mut thread_connections = vec![];
@@ -42,40 +40,20 @@ pub fn create_threads(
     ));
 
     for i in 1..thread_number + 1 {
-        let image_tx = image_s.clone();
-        let image_url_rx = image_url_rx.clone();
-        let (download_log_tx, download_log_rx) = channel();
-        rt.spawn(async move {
-            download::job(image_url_rx, image_tx, ThreadInfoSender::new(download_log_tx)).await;
-        });
-        thread_connections.push(ThreadInfoReceiver::new(
-            format!("Get_{}", i),
-            format!("G{}", i),
-            download_log_rx,
-        ));
-
-        let image_rx = image_r.clone();
-        let (accumulate_log_tx, accumulate_log_rx) = channel();
-        let main_sender = result_image_tx.clone();
-        thread::spawn(move || {
-            accumulate::job(
-                image_rx,
-                main_sender,
-                ThreadInfoSender::new(accumulate_log_tx),
-            );
-        });
-        thread_connections.push(ThreadInfoReceiver::new(
-            format!("Heap_{}", i),
-            format!("H{}", i),
-            accumulate_log_rx,
+        thread_connections.push(download::thread(image_url_rx.clone(), image_s.clone(), i));
+        thread_connections.push(accumulate::thread(
+            image_r.clone(),
+            result_image_s.clone(),
+            i,
         ));
     }
 
+    let (result_image_tx_out, result_image_rx_out) = channel();
     let (summarize_log_tx, summarize_log_rx) = channel();
     thread::spawn(move || {
         summarize::job(
             args,
-            result_image_rx,
+            result_image_r,
             result_image_tx_out,
             ThreadInfoSender::new(summarize_log_tx),
             thread_number,

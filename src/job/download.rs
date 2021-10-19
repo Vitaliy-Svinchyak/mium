@@ -1,5 +1,5 @@
 use std::io::Cursor;
-use std::sync::mpsc::Sender;
+use std::sync::mpsc::{channel, Sender};
 
 use anyhow::{Context, Result};
 use crossbeam_channel::Receiver;
@@ -7,10 +7,27 @@ use futures_util::future::join_all;
 use image::io::Reader as ImageReader;
 use image::{DynamicImage, ImageFormat};
 use reqwest::header::USER_AGENT;
+use tokio::runtime::Handle;
 
+use crate::sync::thread_info_connection::ThreadInfoReceiver;
 use crate::sync::thread_info_sender::ThreadInfoSender;
 
-pub async fn job(
+pub fn thread(
+    rx: Receiver<Option<String>>,
+    tx: Sender<Option<DynamicImage>>,
+    i: usize,
+) -> ThreadInfoReceiver {
+    let rt = Handle::current();
+    let (download_log_tx, download_log_rx) = channel();
+
+    rt.spawn(async move {
+        job(rx, tx, ThreadInfoSender::new(download_log_tx)).await;
+    });
+
+    ThreadInfoReceiver::new(format!("Get_{}", i), format!("G{}", i), download_log_rx)
+}
+
+async fn job(
     rx: Receiver<Option<String>>,
     tx: Sender<Option<DynamicImage>>,
     sender: ThreadInfoSender,

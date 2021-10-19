@@ -1,14 +1,41 @@
-use std::sync::mpsc::{Receiver, Sender};
+use std::sync::mpsc::{channel, Receiver, Sender};
+use std::thread;
 use std::time::Instant;
 
 use anyhow::Context;
 use image::DynamicImage;
 
 use crate::job::accumulate;
+use crate::sync::thread_info_connection::ThreadInfoReceiver;
 use crate::sync::thread_info_sender::ThreadInfoSender;
 use crate::CliArgs;
 
-pub fn job(
+pub fn thread(
+    args: CliArgs,
+    rx: Receiver<Option<DynamicImage>>,
+    thread_number: usize,
+    start: Instant,
+) -> (ThreadInfoReceiver, Receiver<DynamicImage>) {
+    let (result_image_tx_out, result_image_rx_out) = channel();
+    let (summarize_log_tx, summarize_log_rx) = channel();
+
+    thread::spawn(move || {
+        job(
+            args,
+            rx,
+            result_image_tx_out,
+            ThreadInfoSender::new(summarize_log_tx),
+            thread_number,
+            start,
+        );
+    });
+
+    let thread_receiver =
+        ThreadInfoReceiver::new("Summarize".to_owned(), "Sum".to_owned(), summarize_log_rx);
+    (thread_receiver, result_image_rx_out)
+}
+
+fn job(
     args: CliArgs,
     result_image_rx: Receiver<Option<DynamicImage>>,
     result_image_tx: Sender<DynamicImage>,

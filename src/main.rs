@@ -19,8 +19,7 @@ pub struct CliArgs {
     file: String,
 }
 
-#[tokio::main(flavor = "multi_thread", worker_threads = 10)]
-async fn main() {
+fn main() {
     let args: CliArgs = CliArgs::from_args();
     let max_cpus = num_cpus::get();
     let thread_number = if args.pages < max_cpus {

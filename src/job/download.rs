@@ -52,7 +52,9 @@ async fn do_job(url: String, tx: Sender<Option<DynamicImage>>, sender: ThreadInf
 }
 
 async fn download(url: &str, tx: Sender<Option<DynamicImage>>) -> Result<()> {
-    let bytes = get_request(url).await.context(format!("Can't download picture: {}", url))?;
+    let bytes = get_request(url)
+        .await
+        .context(format!("Can't download picture: {}", url))?;
     let image = decode(bytes)?;
 
     tx.send(Some(image))
@@ -72,9 +74,7 @@ async fn get_request(url: &str) -> Result<Vec<u8>> {
         .build()
         .context("Can't build client")?;
 
-    let req = client
-        .get(url)
-        .header(USER_AGENT, "dick from the mountain");
+    let req = client.get(url).header(USER_AGENT, "dick from the mountain");
 
     let response = req.send().await.map_err(Error::msg)?;
 

@@ -1,6 +1,7 @@
-use std::sync::mpsc::{Receiver, Sender};
+use std::sync::mpsc::Sender;
 
 use anyhow::Context;
+use crossbeam_channel::Receiver;
 use image::{DynamicImage, GenericImage, GenericImageView, Rgba};
 
 use crate::sync::thread_info_sender::ThreadInfoSender;
@@ -34,28 +35,11 @@ pub fn job(
 
     let mut i = 1;
 
-    loop {
+    'outer: loop {
         for image in &rx {
             match image {
                 None => {
-                    match tx
-                        .send(Some(medium.clone()))
-                        .context("Can't send accumulated result")
-                    {
-                        Ok(_) => {}
-                        Err(e) => {
-                            sender.error(e);
-                        }
-                    }
-                    match tx.send(None).context("Can't send end result") {
-                        Ok(_) => {}
-                        Err(e) => {
-                            sender.error(e);
-                        }
-                    }
-                    sender.closed();
-
-                    break;
+                    break 'outer;
                 }
                 Some(image) => {
                     accumulate(&image, i, &mut medium);
@@ -67,6 +51,24 @@ pub fn job(
             }
         }
     }
+
+    match tx
+        .send(Some(medium.clone()))
+        .context("Can't send accumulated result")
+    {
+        Ok(_) => {}
+        Err(e) => {
+            sender.error(e);
+        }
+    }
+
+    match tx.send(None).context("Can't send end result") {
+        Ok(_) => {}
+        Err(e) => {
+            sender.error(e);
+        }
+    }
+    sender.closed();
 }
 
 pub fn accumulate(image: &DynamicImage, iteration: usize, medium_image: &mut DynamicImage) {

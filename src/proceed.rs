@@ -1,19 +1,25 @@
-use std::sync::mpsc::{channel, Sender, Receiver};
+use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
 use std::time::Instant;
 
+use crossbeam_channel::{unbounded, bounded};
+use image::DynamicImage;
 use tokio::runtime::Handle;
 
+use crate::job::thread_broadcaster::ThreadBroadcaster;
 use crate::job::{accumulate, download, parse, summarize};
 use crate::sync::thread_info_connection::ThreadInfoReceiver;
 use crate::sync::thread_info_sender::ThreadInfoSender;
 use crate::CliArgs;
-use image::DynamicImage;
 
 pub fn create_threads(
     args: CliArgs,
     thread_number: usize,
-) -> (Vec<Sender<Option<String>>>, Vec<ThreadInfoReceiver>, Receiver<DynamicImage>) {
+) -> (
+    Vec<Sender<Option<String>>>,
+    Vec<ThreadInfoReceiver>,
+    Receiver<DynamicImage>,
+) {
     let start = Instant::now();
 
     let (result_image_tx, result_image_rx) = channel();
@@ -23,11 +29,19 @@ pub fn create_threads(
     let mut query_senders = vec![];
     let mut thread_connections = vec![];
 
+    let (image_tx, image_rx) = channel();
+    let (image_tx2, image_rx2) = bounded(1);
+    let mut image_broadcaster = ThreadBroadcaster::new(image_rx, image_tx2, thread_number);
+    thread::spawn(move || {
+        image_broadcaster.tick();
+    });
+
     for i in 1..thread_number + 1 {
+        let image_tx = image_tx.clone();
+        let image_rx = image_rx2.clone();
         let (query_tx, query_rx) = channel();
         query_senders.push(query_tx);
         let (url_tx, url_rx) = channel();
-        let (image_tx, image_rx) = channel();
 
         let (parse_log_tx, parse_log_rx) = channel();
         let (download_log_tx, download_log_rx) = channel();
@@ -36,6 +50,7 @@ pub fn create_threads(
         thread::spawn(move || {
             parse::job(query_rx, url_tx, ThreadInfoSender::new(parse_log_tx));
         });
+
         thread_connections.push(ThreadInfoReceiver::new(
             format!("Parse_{}", i),
             format!("P{}", i),

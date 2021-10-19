@@ -1,8 +1,14 @@
 extern crate num_cpus;
 
-use std::sync::mpsc::Sender;
+use std::sync::mpsc::{channel, Sender};
+use std::thread;
+use std::thread::sleep;
+use std::time::Duration;
 
+use crossbeam_channel::bounded;
 use structopt::StructOpt;
+
+use crate::job::thread_broadcaster::ThreadBroadcaster;
 
 mod gui;
 mod job;

@@ -29,20 +29,22 @@ pub fn create_threads(
     let mut thread_connections = vec![];
 
     let (image_tx, image_rx) = broadcast_channel(thread_number);
+    let (image_url_tx, image_url_rx) = broadcast_channel(thread_number);
 
     for i in 1..thread_number + 1 {
         let image_tx = image_tx.clone();
         let image_rx = image_rx.clone();
+        let image_url_tx = image_url_tx.clone();
+        let image_url_rx = image_url_rx.clone();
         let (query_tx, query_rx) = channel();
         query_senders.push(query_tx);
-        let (url_tx, url_rx) = channel();
 
         let (parse_log_tx, parse_log_rx) = channel();
         let (download_log_tx, download_log_rx) = channel();
         let (accumulate_log_tx, accumulate_log_rx) = channel();
 
         thread::spawn(move || {
-            parse::job(query_rx, url_tx, ThreadInfoSender::new(parse_log_tx));
+            parse::job(query_rx, image_url_tx, ThreadInfoSender::new(parse_log_tx));
         });
 
         thread_connections.push(ThreadInfoReceiver::new(
@@ -52,7 +54,7 @@ pub fn create_threads(
         ));
 
         rt.spawn(async move {
-            download::job(url_rx, image_tx, ThreadInfoSender::new(download_log_tx)).await;
+            download::job(image_url_rx, image_tx, ThreadInfoSender::new(download_log_tx)).await;
         });
         thread_connections.push(ThreadInfoReceiver::new(
             format!("Get_{}", i),

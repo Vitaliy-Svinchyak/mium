@@ -1,5 +1,5 @@
 use std::io::Cursor;
-use std::sync::mpsc::{Receiver, Sender};
+use std::sync::mpsc::Sender;
 
 use anyhow::{Context, Error, Result};
 use futures::future::join_all;
@@ -8,6 +8,7 @@ use image::{DynamicImage, ImageFormat};
 use reqwest::header::USER_AGENT;
 
 use crate::sync::thread_info_sender::ThreadInfoSender;
+use crossbeam_channel::Receiver;
 
 pub async fn job(
     rx: Receiver<Option<String>>,

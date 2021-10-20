@@ -74,7 +74,7 @@ fn collect_result(
 ) -> anyhow::Result<DynamicImage> {
     let mut results_received = 0;
     let mut valid_results_received = 1;
-    let mut medium_picture = loop {
+    let medium_picture = loop {
         if let Ok(medium_picture) = result_image_rx.recv() {
             results_received += 1;
 
@@ -94,6 +94,7 @@ fn collect_result(
         return Ok(medium_picture);
     }
 
+    let mut medium_picture = medium_picture.into_rgb8();
     loop {
         if let Ok(picture) = result_image_rx.recv() {
             if let Some(picture) = picture {
@@ -110,7 +111,7 @@ fn collect_result(
                     .save("./result.jpeg")
                     .context("Can't save image")?;
 
-                break Ok(medium_picture);
+                break Ok(DynamicImage::ImageRgb8(medium_picture));
             }
         }
     }

@@ -3,7 +3,7 @@ use std::thread;
 
 use anyhow::Context;
 use crossbeam_channel::Receiver;
-use image::{DynamicImage, GenericImage, GenericImageView, Rgba};
+use image::{DynamicImage, GenericImageView, Rgb, RgbImage, Rgba};
 
 use crate::sync::thread_info_connection::ThreadInfoReceiver;
 use crate::sync::thread_info_sender::ThreadInfoSender;
@@ -47,7 +47,7 @@ fn job(
     sender.info("Got first.".to_owned());
     sender.progress();
 
-    let mut medium = medium.unwrap();
+    let mut medium = medium.unwrap().into_rgb8();
 
     let mut i = 1;
 
@@ -69,7 +69,7 @@ fn job(
     }
 
     match tx
-        .send(Some(medium.clone()))
+        .send(Some(DynamicImage::ImageRgb8(medium.clone())))
         .context("Can't send accumulated result")
     {
         Ok(_) => {}
@@ -87,34 +87,39 @@ fn job(
     sender.closed();
 }
 
-pub fn accumulate(image: &DynamicImage, iteration: usize, medium_image: &mut DynamicImage) {
-    for (x, y, Rgba(pixel)) in image.pixels() {
-        let Rgba(medium_pixel) = medium_image.get_pixel(x, y);
-        let new_pixel = calculate_new_color(pixel, medium_pixel, iteration);
-
-        medium_image.put_pixel(x, y, new_pixel);
+#[inline(always)]
+pub fn accumulate(image: &DynamicImage, iteration: u8, medium_image: &mut RgbImage) {
+    let mut image_iterator = image.pixels();
+    for (_, _, Rgb(medium_pixel)) in medium_image.enumerate_pixels_mut() {
+        let (_, _, Rgba(pixel)) = &image_iterator.next().unwrap();
+        calculate_new_color(pixel, medium_pixel, iteration);
     }
 }
 
-fn calculate_new_color(pixel: [u8; 4], medium_pixel: [u8; 4], iteration: usize) -> Rgba<u8> {
+#[inline(always)]
+fn calculate_new_color(pixel: &[u8; 4], medium_pixel: &mut [u8; 3], iteration: u8) {
     let pixel_is_white = pixel[0] >= 250 && pixel[1] >= 250 && pixel[2] >= 250;
     let medium_pixel_is_white =
         medium_pixel[0] >= 250 && medium_pixel[1] >= 250 && medium_pixel[2] >= 250;
 
     if pixel_is_white {
-        Rgba(medium_pixel)
+        ()
     } else if medium_pixel_is_white {
-        Rgba(pixel)
+        medium_pixel[0] = pixel[0];
+        medium_pixel[1] = pixel[1];
+        medium_pixel[2] = pixel[2];
     } else {
-        Rgba([
-            calculate_new_byte(pixel[0], medium_pixel[0], iteration),
-            calculate_new_byte(pixel[1], medium_pixel[1], iteration),
-            calculate_new_byte(pixel[2], medium_pixel[2], iteration),
-            1,
-        ])
+        medium_pixel[0] = calculate_new_byte(pixel[0], medium_pixel[0], iteration);
+        medium_pixel[1] = calculate_new_byte(pixel[1], medium_pixel[1], iteration);
+        medium_pixel[1] = calculate_new_byte(pixel[2], medium_pixel[2], iteration);
     }
 }
 
-fn calculate_new_byte(byte: u8, medium_byte: u8, iteration: usize) -> u8 {
-    ((medium_byte as usize * iteration + byte as usize) / (iteration + 1)) as u8
+#[inline(always)]
+fn calculate_new_byte(byte: u8, medium_byte: u8, i: u8) -> u8 {
+    if byte > medium_byte {
+        medium_byte + (byte - medium_byte) / (i + 1)
+    } else {
+        medium_byte - (medium_byte - byte) / (i + 1)
+    }
 }

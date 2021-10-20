@@ -613,6 +613,7 @@ name = "mium"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "bytes",
  "crossbeam-channel",
  "futures-util",
  "image",

@@ -11,6 +11,7 @@ use reqwest::header::USER_AGENT;
 
 use crate::sync::thread_info_connection::ThreadInfoReceiver;
 use crate::sync::thread_info_sender::ThreadInfoSender;
+use bytes::Bytes;
 
 pub fn thread(
     rx: Receiver<Option<String>>,
@@ -78,7 +79,7 @@ async fn download(url: &str, tx: Sender<Option<DynamicImage>>) -> Result<()> {
     let bytes = get_request(url)
         .await
         .context(format!("Can't download picture: {}", url))?;
-    let image = decode(bytes)?;
+    let image = decode(&bytes)?;
 
     tx.send(Some(image))
         .context("Can't send picture to channel")?;
@@ -86,13 +87,13 @@ async fn download(url: &str, tx: Sender<Option<DynamicImage>>) -> Result<()> {
     Ok(())
 }
 
-fn decode(bytes: Vec<u8>) -> Result<DynamicImage> {
-    ImageReader::with_format(Cursor::new(bytes.as_slice()), ImageFormat::Jpeg)
+fn decode(bytes: &[u8]) -> Result<DynamicImage> {
+    ImageReader::with_format(Cursor::new(bytes), ImageFormat::Jpeg)
         .decode()
         .context("Can't decode image")
 }
 
-async fn get_request(url: &str) -> Result<Vec<u8>> {
+async fn get_request(url: &str) -> Result<Bytes> {
     let client = reqwest::Client::builder()
         .build()
         .context("Can't build client")?;
@@ -104,6 +105,5 @@ async fn get_request(url: &str) -> Result<Vec<u8>> {
     Ok(response
         .bytes()
         .await
-        .context("Can't get bytes from request")?
-        .to_vec())
+        .context("Can't get bytes from request")?)
 }
